@@ -1,0 +1,8 @@
+{
+    "fonts": {
+        "roboto": {
+            "font_filepath": "editor/content/font/Roboto.ttf",
+            "font_size": 18.0
+        }
+    }
+}

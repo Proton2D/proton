@@ -1,0 +1,288 @@
+{
+    "ID": 920952361774126507,
+    "Tag": "BG_Mountains",
+    "Transform": {
+        "Position": [
+            9.403,
+            -3.92603,
+            0.0
+        ],
+        "Rotation": 0.0,
+        "Scale": [
+            1.0,
+            1.0
+        ]
+    },
+    "Entities": [
+        {
+            "ID": 1092754294239486429,
+            "Tag": "bg-6",
+            "Transform": {
+                "Position": [
+                    0.0,
+                    0.0,
+                    -0.101
+                ],
+                "Rotation": 0.0,
+                "Scale": [
+                    1.0,
+                    1.0
+                ]
+            },
+            "Sprite": {
+                "Texture": "bg-mountains\\plx-6.png",
+                "FilterMode": 0,
+                "Flip": [
+                    false,
+                    false
+                ],
+                "Color": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "Scripts": [
+                {
+                    "ClassName": "ParallaxBackground",
+                    "Fields": [
+                        {
+                            "FieldName": "PositionOffset",
+                            "Value": 0.0
+                        },
+                        {
+                            "FieldName": "ParallaxFactor",
+                            "Value": 0.10000000149011612
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "ID": 10002013115496848799,
+            "Tag": "bg-5",
+            "Transform": {
+                "Position": [
+                    0.0,
+                    0.0,
+                    -0.102
+                ],
+                "Rotation": 0.0,
+                "Scale": [
+                    1.33333,
+                    1.0
+                ]
+            },
+            "Sprite": {
+                "Texture": "bg-mountains\\plx-5.png",
+                "FilterMode": 0,
+                "Flip": [
+                    false,
+                    false
+                ],
+                "Color": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "Scripts": [
+                {
+                    "ClassName": "ParallaxBackground",
+                    "Fields": [
+                        {
+                            "FieldName": "PositionOffset",
+                            "Value": 0.0
+                        },
+                        {
+                            "FieldName": "ParallaxFactor",
+                            "Value": 0.03999999910593033
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "ID": 13039526700205854813,
+            "Tag": "bg-4",
+            "Transform": {
+                "Position": [
+                    0.0,
+                    0.0,
+                    -0.103
+                ],
+                "Rotation": 0.0,
+                "Scale": [
+                    0.66667,
+                    1.0
+                ]
+            },
+            "Sprite": {
+                "Texture": "bg-mountains\\plx-4.png",
+                "FilterMode": 0,
+                "Flip": [
+                    false,
+                    false
+                ],
+                "Color": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "Scripts": [
+                {
+                    "ClassName": "ParallaxBackground",
+                    "Fields": [
+                        {
+                            "FieldName": "PositionOffset",
+                            "Value": 0.0
+                        },
+                        {
+                            "FieldName": "ParallaxFactor",
+                            "Value": 0.02500000037252903
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "ID": 9213539649923076364,
+            "Tag": "bg-3",
+            "Transform": {
+                "Position": [
+                    0.0,
+                    0.0,
+                    -0.104
+                ],
+                "Rotation": 0.0,
+                "Scale": [
+                    0.6,
+                    1.0
+                ]
+            },
+            "Sprite": {
+                "Texture": "bg-mountains\\plx-3.png",
+                "FilterMode": 0,
+                "Flip": [
+                    false,
+                    false
+                ],
+                "Color": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "Scripts": [
+                {
+                    "ClassName": "ParallaxBackground",
+                    "Fields": [
+                        {
+                            "FieldName": "PositionOffset",
+                            "Value": 0.0
+                        },
+                        {
+                            "FieldName": "ParallaxFactor",
+                            "Value": 0.009999999776482582
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "ID": 11025858556848252266,
+            "Tag": "bg-2",
+            "Transform": {
+                "Position": [
+                    0.0,
+                    0.0,
+                    -0.105
+                ],
+                "Rotation": 0.0,
+                "Scale": [
+                    0.53333,
+                    1.0
+                ]
+            },
+            "Sprite": {
+                "Texture": "bg-mountains\\plx-2.png",
+                "FilterMode": 0,
+                "Flip": [
+                    false,
+                    false
+                ],
+                "Color": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "Scripts": [
+                {
+                    "ClassName": "ParallaxBackground",
+                    "Fields": [
+                        {
+                            "FieldName": "PositionOffset",
+                            "Value": 0.0
+                        },
+                        {
+                            "FieldName": "ParallaxFactor",
+                            "Value": 0.003000000026077032
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "ID": 9879717648033061331,
+            "Tag": "bg-1",
+            "Transform": {
+                "Position": [
+                    0.0,
+                    0.0,
+                    -0.106
+                ],
+                "Rotation": 0.0,
+                "Scale": [
+                    1.33333,
+                    1.0
+                ]
+            },
+            "Sprite": {
+                "Texture": "bg-mountains\\plx-1.png",
+                "FilterMode": 0,
+                "Flip": [
+                    false,
+                    false
+                ],
+                "Color": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "Scripts": [
+                {
+                    "ClassName": "ParallaxBackground",
+                    "Fields": [
+                        {
+                            "FieldName": "PositionOffset",
+                            "Value": -6.0
+                        },
+                        {
+                            "FieldName": "ParallaxFactor",
+                            "Value": 0.0
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

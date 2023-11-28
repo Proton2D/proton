@@ -1,0 +1,48 @@
+{
+    "UUID": 12494079893961539391,
+    "Tag": "Platform",
+    "Transform": {
+        "Position": [
+            4.17,
+            0.0,
+            0.054
+        ],
+        "Rotation": 0.0,
+        "Scale": [
+            2.45,
+            1.0
+        ]
+    },
+    "ResizableSprite": {
+        "Spritesheet": "level-sheet.png",
+        "Width": 3,
+        "Height": 3,
+        "Edges": 255,
+        "TileScale": 1.0,
+        "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ]
+    },
+    "Rigidbody": {
+        "Type": 0,
+        "FixedRotation": false
+    },
+    "BoxCollider": {
+        "Size": [
+            0.9399999976158142,
+            0.33000001311302185
+        ],
+        "Offset": [
+            0.0,
+            0.0
+        ],
+        "Friction": 0.5,
+        "Restitution": 0.0,
+        "RestitutionThreshold": 0.5,
+        "Density": 1.0,
+        "IsSensor": false
+    }
+}

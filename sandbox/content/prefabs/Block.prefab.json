@@ -1,0 +1,48 @@
+{
+    "ID": 7546317364494050524,
+    "Tag": "Block",
+    "Transform": {
+        "Position": [
+            27.83043,
+            -2.49177,
+            0.061
+        ],
+        "Rotation": 0.0,
+        "Scale": [
+            4.0,
+            3.0
+        ]
+    },
+    "ResizableSprite": {
+        "Spritesheet": "level-sheet.png",
+        "Width": 4,
+        "Height": 4,
+        "Edges": 255,
+        "TileScale": 1.0,
+        "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ]
+    },
+    "Rigidbody": {
+        "Type": 0,
+        "FixedRotation": false
+    },
+    "BoxCollider": {
+        "Size": [
+            0.9399999976158142,
+            0.8999999761581421
+        ],
+        "Offset": [
+            0.0,
+            0.0
+        ],
+        "Friction": 0.5,
+        "Restitution": 0.0,
+        "RestitutionThreshold": 0.5,
+        "Density": 1.0,
+        "IsSensor": false
+    }
+}
