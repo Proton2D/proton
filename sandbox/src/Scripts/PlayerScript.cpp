@@ -41,11 +41,17 @@ void PlayerScript::OnCreate()
 				m_ContactCount--;
 		};
 	}
+	else {
+		// TODO: Create in OnCreate, remove from the Player prefab
+		PT_ERROR("Player has no FootSensor");
+	}
 }
 
 void PlayerScript::OnUpdate(float ts)
 {
-	m_FootSensor.GetTransform().Position = m_Entity.GetTransform().Position;
+	// TODO: Add world/local position feature for child entities in engine and remove this
+	const glm::vec3 playerPos = m_Entity.GetTransform().Position;
+	m_FootSensor.GetRuntimeBody()->SetTransform({ playerPos.x, playerPos.y }, 0.0f);
 
 	// === Attack (Space) ===
 	bool space = Input::IsKeyPressed(Key::Space);

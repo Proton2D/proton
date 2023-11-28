@@ -10,6 +10,7 @@ enum PlayerAnimation : uint32_t
 	Idle, Run, Attack, Jump
 };
 
+// TODO: Remove this and add Character, CharacterController builtin scripts in the engine
 class PlayerScript: public EntityScript
 {
 public:
