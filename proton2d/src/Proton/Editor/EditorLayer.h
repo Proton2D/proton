@@ -50,7 +50,7 @@ namespace proton {
 		EditorMenuBar m_MenuBar;
 		std::vector<std::pair<std::string, EditorPanel*>> m_EditorPanels;
 
-		bool m_EnableViewports = true; // when set to true ImGui windows can be detached from main GLFW window
+		bool m_EnableViewports = false; // when set to true ImGui windows can be detached from main GLFW window
 		bool m_BlockEvents = true; // set automaticly to false when viewport is not hovered by mouse
 
 		// Scene viewport
