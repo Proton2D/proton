@@ -1,10 +1,10 @@
 {
-    "ID": 6549071544000056107,
+    "UUID": 15452605691319723735,
     "Tag": "Player",
     "Transform": {
         "Position": [
-            11.75359,
-            4.53959,
+            -3.00397,
+            0.6784,
             0.0
         ],
         "Rotation": 0.0,
@@ -35,13 +35,6 @@
             1.0
         ]
     },
-    "Camera": {
-        "ZoomLevel": 2.5,
-        "PositionOffset": [
-            0.0,
-            2.5
-        ]
-    },
     "Rigidbody": {
         "Type": 2,
         "FixedRotation": true
@@ -61,6 +54,13 @@
         "Density": 5.0,
         "IsSensor": false
     },
+    "Camera": {
+        "ZoomLevel": 2.5,
+        "PositionOffset": [
+            0.0,
+            2.5
+        ]
+    },
     "Scripts": [
         {
             "ClassName": "PlayerScript",
@@ -78,12 +78,12 @@
     ],
     "Entities": [
         {
-            "ID": 10397077487674101346,
+            "UUID": 10538513902662413536,
             "Tag": "FootSensor",
             "Transform": {
                 "Position": [
-                    11.754,
-                    4.54,
+                    11.599,
+                    4.425,
                     0.0
                 ],
                 "Rotation": 0.0,
@@ -92,18 +92,14 @@
                     1.0
                 ]
             },
-            "Rigidbody": {
-                "Type": 2,
-                "FixedRotation": true
-            },
             "BoxCollider": {
                 "Size": [
-                    0.5099999904632568,
+                    0.6499999761581421,
                     0.41999998688697815
                 ],
                 "Offset": [
-                    -0.05000000074505806,
-                    -2.4100000858306885
+                    0.009999999776482582,
+                    -2.390000104904175
                 ],
                 "Friction": 0.5,
                 "Restitution": 0.0,

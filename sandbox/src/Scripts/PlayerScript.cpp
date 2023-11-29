@@ -23,10 +23,10 @@ void PlayerScript::OnCreate()
 	m_Animation->SetAnimation(Idle, Right);
 
 	// Foot sensor detects if player is on the ground
-	proton::UUID playerUUID = m_Entity.GetUUID();
 	m_FootSensor = m_Entity.GetScene()->FindByTag("FootSensor");
 	if (m_FootSensor)
 	{
+		proton::UUID playerUUID = m_Entity.GetUUID();
 		auto& bc = m_FootSensor.GetComponent<BoxColliderComponent>();
 
 		bc.ContactCallback.OnBeginContactFunction = [&, playerUUID](PhysicsContactInfo info)
@@ -49,10 +49,6 @@ void PlayerScript::OnCreate()
 
 void PlayerScript::OnUpdate(float ts)
 {
-	// TODO: Add world/local position feature for child entities in engine and remove this
-	const glm::vec3 playerPos = m_Entity.GetTransform().Position;
-	m_FootSensor.GetRuntimeBody()->SetTransform({ playerPos.x, playerPos.y }, 0.0f);
-
 	// === Attack (Space) ===
 	bool space = Input::IsKeyPressed(Key::Space);
 	if (m_IsAttacking)
