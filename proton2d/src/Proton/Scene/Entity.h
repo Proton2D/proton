@@ -40,16 +40,6 @@ namespace proton {
 			return sprite;
 		}
 
-		// CameraComponent override of AddComponent
-		template<>
-		CameraComponent& AddComponent() const
-		{
-			PT_ASSERT(!HasComponent<CameraComponent>(), "Entity already has component!");
-			auto& camera = m_Scene->m_Registry.emplace<CameraComponent>(m_Handle);
-			camera.Camera = MakeShared<Camera>();
-			return camera;
-		}
-
 		// SpriteAnimationComponent override of AddComponent
 		template<>
 		SpriteAnimationComponent& AddComponent() const
@@ -187,8 +177,9 @@ namespace proton {
 		friend class Scene;
 		friend class SceneSerializer;
 		friend class EntityScript;
+
 		friend class InspectorPanel;
-		friend class EditorLayer;
+		friend class SceneViewportPanel;
 	};
 
 }

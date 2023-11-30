@@ -1,8 +1,8 @@
 #include "ptpch.h"
 #ifdef PT_EDITOR
 #include "Proton/Editor/Panels/MiscellaneousPanel.h"
-#include "Proton/Graphics/Renderer/Renderer.h"
 #include "Proton/Editor/EditorLayer.h"
+#include "Proton/Graphics/Renderer/Renderer.h"
 #include "Proton/Assets/AssetManager.h"
 #include "Proton/Core/Application.h"
 
@@ -50,12 +50,12 @@ namespace proton {
 		{
 			if (ImGui::TreeNodeEx("Editor", ImGuiTreeNodeFlags_DefaultOpen))
 			{
-				ImGui::Checkbox("Selection outline", &EditorLayer::Get()->m_ShowSelectionOutline);
-				ImGui::Checkbox("Selection collider", &EditorLayer::Get()->m_ShowSelectionCollider);
-				ImGui::Checkbox("Show colliders", &EditorLayer::Get()->m_ShowAllColliders);
-				ImGui::Checkbox("Runtime camera", &EditorLayer::Get()->m_UseEditorCameraInRuntime);
+				ImGui::Checkbox("Selection outline", &m_SceneViewportPanel->m_ShowSelectionOutline);
+				ImGui::Checkbox("Selection collider", &m_SceneViewportPanel->m_ShowSelectionCollider);
+				ImGui::Checkbox("Show colliders", &m_SceneViewportPanel->m_ShowAllColliders);
+				ImGui::Checkbox("Runtime camera", &EditorLayer::GetCamera().m_UseInRuntime);
 				if (ImGui::Button("Reset Camera"))
-					EditorLayer::Get()->ResetCameraPosition();
+					m_SceneViewportPanel->ResetCameraPosition();
 				ImGui::TreePop();
 			}
 			if (ImGui::TreeNodeEx("Application", ImGuiTreeNodeFlags_DefaultOpen))

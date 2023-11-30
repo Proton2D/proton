@@ -17,7 +17,7 @@ void ParallaxBackground::OnCreate()
 	auto& sprite = m_Entity.GetComponent<SpriteComponent>().Sprite;
 
 	m_SpriteAspectRatio = sprite.GetAspectRatio();
-	m_CopiesCount = 1 + (uint32_t)ceil(camera->GetAspectRatio() / m_SpriteAspectRatio);
+	m_CopiesCount = 1 + (uint32_t)ceil(camera.GetAspectRatio() / m_SpriteAspectRatio);
 	m_Entity.DestroyChildEntities();
 
 	for (uint32_t i = 0; i < m_CopiesCount; i++)
@@ -33,8 +33,8 @@ void ParallaxBackground::OnCreate()
 void ParallaxBackground::OnUpdate(float ts)
 {
 	const auto& camera = m_Scene->GetPrimaryCamera();
-	float zoomLevel = camera->GetZoomLevel();
-	float viewSize = camera->GetOrthographicSize() * zoomLevel;
+	float zoomLevel = camera.GetZoomLevel();
+	float viewSize = camera.GetOrthographicSize() * zoomLevel;
 	const glm::vec3& cameraPos = m_Scene->GetPrimaryCameraPosition();
 	glm::vec2 scale = { viewSize * m_SpriteAspectRatio, viewSize };
 

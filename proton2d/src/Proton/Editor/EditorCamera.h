@@ -9,31 +9,30 @@ namespace proton {
 
 	class EditorCamera {
 	public:
-		EditorCamera(const Shared<Camera>& camera = MakeShared<Camera>());
 		virtual ~EditorCamera() = default;
 
 		void OnUpdate(float ts);
 		void OnEvent(Event& e);
 
-		Shared<Camera> GetBaseCamera() { return m_Camera; }
-		const Shared<Camera>& GetBaseCamera() const { return m_Camera; }
+		Camera& GetBaseCamera() { return m_Camera; }
+		const Camera& GetBaseCamera() const { return m_Camera; }
 
 		const glm::vec3& GetPosition() const { return m_Position; }
 
 		void OnViewportResize(float w, float h);
 
 	private:
-		Shared<Camera> m_Camera;
+		Camera m_Camera;
+		glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
 		
-		glm::vec3 m_Position;
-
-		float m_AspectRatio = 16.0f / 9.0f;
-		float m_CameraSpeed = 3.0f;
 		float m_ZoomLevelTarget = 1.0f;
 		float m_CameraZoomSpeed = 0.10f;
+		bool m_UseInRuntime = false;
 
-		friend class EditorLayer;
+		friend class Scene;
 		friend class SceneSerializer;
+		friend class SceneViewportPanel;
+		friend class MiscellaneousPanel;
 	};
 }
 #endif // PT_EDITOR

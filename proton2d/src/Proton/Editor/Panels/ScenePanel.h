@@ -13,8 +13,6 @@ namespace proton {
 	private:
 		void DrawSceneMemoryView();
 
-		void StopSceneSimulation();
-
 	private:
 		float m_SavedSceneTextTimer = 0.0f;
 	};

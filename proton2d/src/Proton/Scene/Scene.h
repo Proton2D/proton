@@ -70,7 +70,7 @@ namespace proton {
 		// Camera related methods
 		void SetPrimaryCameraEntity(Entity entity);
 		Entity GetPrimaryCameraEntity();
-		Shared<Camera> GetPrimaryCamera();
+		Camera& GetPrimaryCamera();
 		const glm::vec3& GetPrimaryCameraPosition();
 
 		// Cursor related methods
@@ -121,8 +121,8 @@ namespace proton {
 
 		// Camera
 		entt::entity m_PrimaryCameraEntity = entt::null;
-		Shared<Camera> m_PrimaryCamera = nullptr;
-		Shared<Camera> m_DefaultCamera; // pass this to Renderer if m_PrimaryCamera is nullptr
+		Camera* m_PrimaryCamera = nullptr;
+		Camera m_DefaultCamera; // pass this to Renderer if m_PrimaryCamera is nullptr
 
 		// Physics
 		bool m_EnablePhysics = true;
@@ -144,6 +144,7 @@ namespace proton {
 		friend class SceneHierarchyPanel;
 		friend class ScenePanel;
 		friend class EditorMenuBar;
+		friend class SceneViewportPanel;
 
 		friend class PhysicsWorld;
 	};

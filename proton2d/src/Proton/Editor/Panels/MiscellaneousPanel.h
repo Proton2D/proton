@@ -4,6 +4,8 @@
 
 namespace proton {
 
+	class SceneViewportPanel;
+
 	class MiscellaneousPanel : public EditorPanel
 	{
 	public:
@@ -22,6 +24,8 @@ namespace proton {
 		uint32_t m_FrameTimeValuesOffset = 0;
 
 		float m_RefreshStatsTimer = 0.0f;
+
+		SceneViewportPanel* m_SceneViewportPanel = nullptr;
 
 		friend class Application;
 		friend class EditorLayer;

@@ -201,7 +201,7 @@ namespace proton {
 		{
 			auto& camera = entity.GetComponent<CameraComponent>();
 			jsonObj["Camera"] = {
-				{ "ZoomLevel", camera.Camera->GetZoomLevel() },
+				{ "ZoomLevel", camera.Camera.GetZoomLevel() },
 				{ "PositionOffset", { camera.PositionOffset.x, camera.PositionOffset.y } },
 			};
 		}
@@ -360,7 +360,7 @@ namespace proton {
 		{
 			auto& camera = entity.AddComponent<CameraComponent>();
 			json& cameraJson = jsonObj["Camera"];
-			camera.Camera->SetZoomLevel(cameraJson["ZoomLevel"]);
+			camera.Camera.SetZoomLevel(cameraJson["ZoomLevel"]);
 			camera.PositionOffset = { cameraJson["PositionOffset"][0], cameraJson["PositionOffset"][1] };
 		}
 

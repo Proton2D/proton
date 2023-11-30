@@ -28,6 +28,8 @@ namespace proton {
 
 		const glm::uvec2& GetTileSize() const { return m_TileSize; }
 
+		const glm::uvec2& GetPixelSize() const { return m_PixelSize; }
+
 		// Sets sprite mirror flip
 		void MirrorFlip(bool mirror_x, bool mirror_y);
 
@@ -55,7 +57,6 @@ namespace proton {
 		friend class Renderer;
 		friend class Scene;
 		friend class InspectorPanel;
-		friend class EditorLayer;
 		friend class SceneSerializer;
 		friend class Entity;
 	};

@@ -414,9 +414,9 @@ namespace proton {
 							m_ActiveScene->SetPrimaryCameraEntity(Entity{});
 					}
 
-					float zoom = component.Camera->GetZoomLevel();
+					float zoom = component.Camera.GetZoomLevel();
 					if (ImGui::DragFloat("Zoom level", &zoom, 0.01f))
-						component.Camera->SetZoomLevel(zoom);
+						component.Camera.SetZoomLevel(zoom);
 					ImGui::DragFloat2("Position offset", glm::value_ptr(component.PositionOffset), 0.01f);
 				});
 		}

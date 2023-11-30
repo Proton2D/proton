@@ -2,6 +2,13 @@
 #ifdef PT_EDITOR
 #include "Proton/Editor/EditorCamera.h"
 #include "Proton/Editor/EditorMenuBar.h"
+#include "Proton/Editor/Panels/MiscellaneousPanel.h"
+#include "Proton/Editor/Panels/InspectorPanel.h"
+#include "Proton/Editor/Panels/SceneHierarchyPanel.h"
+#include "Proton/Editor/Panels/SceneViewportPanel.h"
+#include "Proton/Editor/Panels/ScenePanel.h"
+#include "Proton/Editor/Panels/PrefabPanel.h"
+
 #include "Proton/Core/AppLayer.h"
 #include "Proton/Core/Config.h"
 #include "Proton/Scene/Entity.h"
@@ -10,6 +17,7 @@
 namespace proton {
 
 	class EditorPanel;
+	class SceneViewportPanel;
 
 	class EditorLayer : AppLayer
 	{
@@ -28,17 +36,11 @@ namespace proton {
 		static void SetActiveScene(Scene* scene);
 		static void SelectEntity(Entity entity);
 
-		static EditorCamera& GetCamera() { return s_Instance->m_Camera; }
+		static EditorCamera& GetCamera();
 
 	private:
 		void BeginImGuiRender();
 		void EndImGuiRender();
-
-		void PushEditorPanel(const std::string& name, EditorPanel* panel);
-		void PopEditorPanel(const std::string& name);
-
-		void DrawCollidersAndSelectionOutline();
-		void ResetCameraPosition();
 
 	private:
 		static EditorLayer* s_Instance;
@@ -46,32 +48,19 @@ namespace proton {
 		Entity m_SelectedEntity;
 
 		EditorConfig m_Config;
-		EditorCamera m_Camera;
 		EditorMenuBar m_MenuBar;
-		std::vector<std::pair<std::string, EditorPanel*>> m_EditorPanels;
+
+		MiscellaneousPanel m_MiscPanel;
+		InspectorPanel m_InspectorPanel;
+		SceneHierarchyPanel m_SceneHiearchyPanel;
+		ScenePanel m_ScenePanel;
+		PrefabPanel m_PrefabPanel;
+		SceneViewportPanel m_SceneViewportPanel;
+
+		std::vector<EditorPanel*> m_EditorPanels;
 
 		bool m_EnableViewports = false; // when set to true ImGui windows can be detached from main GLFW window
-		bool m_BlockEvents = true; // set automaticly to false when viewport is not hovered by mouse
-
-		// Scene viewport
-		Shared<Framebuffer> m_Framebuffer;
-		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
-		glm::vec2 m_ViewportBounds[2] = { { 0.0f, 0.0f }, {0.0f, 0.0f} };
-		glm::vec2 m_MousePos = { 0.0f, 0.0f };
-		bool m_ViewportFocused = false;
-		bool m_ViewportHovered = false;
-
-		// Editor options
-		bool m_UseEditorCameraInRuntime = false;
-		bool m_ShowSelectionOutline = true;
-		bool m_ShowSelectionCollider = true;
-		bool m_ShowAllColliders = false;
-
-		// Entity selection
-		bool m_MoveSelectedEntity = false;
-		bool m_MoveEditorCamera = false;
-		glm::vec2 m_SelectionMouseOffset = { 0.0f, 0.0f };
-		glm::vec2 m_CameraDragOffset = { 0.0f, 0.0f };
+		bool m_BlockEvents = true;
 
 		friend class Application;
 		friend class Scene;
@@ -80,6 +69,7 @@ namespace proton {
 		friend class MiscellaneousPanel;
 		friend class ScenePanel;
 		friend class EditorCamera;
+		friend class SceneViewportPanel;
 	};
 
 }

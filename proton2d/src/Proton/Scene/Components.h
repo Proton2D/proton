@@ -72,7 +72,7 @@ namespace proton {
 
 	struct CameraComponent
 	{
-		Shared<Camera> Camera = nullptr;
+		Camera Camera;
 		glm::vec2 PositionOffset { 0.0f, 0.0f };
 	};
 

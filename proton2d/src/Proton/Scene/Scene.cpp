@@ -17,9 +17,7 @@
 namespace proton {
 
 	Scene::Scene(const std::string& name)
-		: m_SceneName(name),
-		m_DefaultCamera(MakeShared<Camera>()),
-		m_PhysicsWorld(new PhysicsWorld(this))
+		: m_SceneName(name), m_PhysicsWorld(new PhysicsWorld(this))
 	{
 	}
 
@@ -179,7 +177,7 @@ namespace proton {
 		}
 
 		// Render scene
-		RenderScene(*GetPrimaryCamera());
+		RenderScene(GetPrimaryCamera());
 	}
 
 	Entity Scene::FindByID(UUID id)
@@ -271,7 +269,7 @@ namespace proton {
 		for (auto entity : view)
 		{
 			auto& camera = view.get<CameraComponent>(entity);
-			camera.Camera->SetAspectRatio((float)width / float(height));
+			camera.Camera.SetAspectRatio((float)width / float(height));
 		}
 	}
 
@@ -292,7 +290,7 @@ namespace proton {
 	void Scene::CachePrimaryCameraPosition()
 	{
 	#ifdef PT_EDITOR
-		if (m_SceneState != SceneState::Stop && !EditorLayer::Get()->m_UseEditorCameraInRuntime)
+		if (m_SceneState != SceneState::Stop && !EditorLayer::GetCamera().m_UseInRuntime)
 		{
 	#endif
 			if (m_PrimaryCameraEntity == entt::null) 
@@ -315,16 +313,16 @@ namespace proton {
 	void Scene::CacheCursorWorldPosition()
 	{
 #ifdef PT_EDITOR
-		uint32_t width = (uint32_t)EditorLayer::s_Instance->m_ViewportSize.x;
-		uint32_t height = (uint32_t)EditorLayer::s_Instance->m_ViewportSize.y;
+		uint32_t width = (uint32_t)EditorLayer::Get()->m_SceneViewportPanel.m_ViewportSize.x;
+		uint32_t height = (uint32_t)EditorLayer::Get()->m_SceneViewportPanel.m_ViewportSize.y;
 #else
 		Window& window = Application::Get().GetWindow();
 		uint32_t width = window.GetWidth(), height = window.GetHeight();
 #endif
-		OrthoProjection ortho = GetPrimaryCamera()->GetOrthoProjection();
+		OrthoProjection ortho = GetPrimaryCamera().GetOrthoProjection();
 		auto& camera = GetPrimaryCameraPosition();
 #ifdef PT_EDITOR
-		const glm::vec2& mouse = EditorLayer::s_Instance->m_MousePos;
+		const glm::vec2& mouse = EditorLayer::Get()->m_SceneViewportPanel.m_MousePos;
 #else
 		glm::vec2 mouse = Input::GetMousePosition();
 #endif
@@ -354,17 +352,17 @@ namespace proton {
 		}
 
 		auto& camera = entity.GetComponent<CameraComponent>();
-		m_PrimaryCamera = camera.Camera;
+		m_PrimaryCamera = &camera.Camera;
 		m_PrimaryCameraEntity = entity.m_Handle;
 	}
 
-	Shared<Camera> Scene::GetPrimaryCamera()
+	Camera& Scene::GetPrimaryCamera()
 	{
 	#ifdef PT_EDITOR
 		if (m_SceneState != SceneState::Stop) {
 	#endif
 		// TODO: Refactor this and Renderer::RenderScene
-		return m_PrimaryCamera ? m_PrimaryCamera : m_DefaultCamera;
+		return m_PrimaryCamera ? *m_PrimaryCamera : m_DefaultCamera;
 	#ifdef PT_EDITOR
 		}
 		return EditorLayer::GetCamera().GetBaseCamera();

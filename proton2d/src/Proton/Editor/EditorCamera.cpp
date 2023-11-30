@@ -11,29 +11,23 @@
 
 namespace proton {
 
-	EditorCamera::EditorCamera(const Shared<Camera>& camera)
-		: m_AspectRatio(Application::Get().GetWindow().GetAspectRatio()),
-		m_Camera(camera), m_Position({ 0.0f, 0.0f, 0.0f })
-	{
-	}
-
 	void EditorCamera::OnUpdate(float ts)
 	{
 		Scene* activeScene = EditorLayer::Get()->m_ActiveScene;
 		if (!activeScene)
 			return;
 
-		if (activeScene->m_SceneState == SceneState::Stop || EditorLayer::Get()->m_UseEditorCameraInRuntime)
+		if (activeScene->m_SceneState == SceneState::Stop || m_UseInRuntime)
 		{
-			float zoomLevel = m_Camera->GetZoomLevel();
+			float zoomLevel = m_Camera.GetZoomLevel();
 			float zoomTargetDiff = glm::abs(m_ZoomLevelTarget - zoomLevel);
 			float zoomOffset = glm::max(glm::round(zoomTargetDiff * ts * 10000.0f) / 1000.0f, 0.001f);
 
 			if (m_ZoomLevelTarget > zoomLevel)
-				m_Camera->SetZoomLevel(glm::min(zoomLevel + zoomOffset, m_ZoomLevelTarget));
+				m_Camera.SetZoomLevel(glm::min(zoomLevel + zoomOffset, m_ZoomLevelTarget));
 
 			else if (m_ZoomLevelTarget < zoomLevel)
-				m_Camera->SetZoomLevel(glm::max(zoomLevel - zoomOffset, m_ZoomLevelTarget));
+				m_Camera.SetZoomLevel(glm::max(zoomLevel - zoomOffset, m_ZoomLevelTarget));
 		}
 	}	
 
@@ -44,7 +38,7 @@ namespace proton {
 		if (!activeScene) 
 			return;
 
-		if (activeScene->m_SceneState == SceneState::Stop || EditorLayer::Get()->m_UseEditorCameraInRuntime)
+		if (activeScene->m_SceneState == SceneState::Stop || m_UseInRuntime)
 		{
 			dispatcher.Dispatch<MouseScrolledEvent>([&](MouseScrolledEvent& event) -> bool 
 			{
@@ -58,8 +52,7 @@ namespace proton {
 
 	void EditorCamera::OnViewportResize(float w, float h)
 	{
-		m_AspectRatio = w / h;
-		m_Camera->SetAspectRatio(w / h);
+		m_Camera.SetAspectRatio(w / h);
 	}
 
 }
