@@ -12,11 +12,10 @@ public:
 		m_Body = m_Entity.GetRuntimeBody();
 		auto& bc = m_Entity.GetComponent<BoxColliderComponent>();
 
-		bc.ContactCallback.OnBeginContactFunction = [&](PhysicsContactInfo info)
+		bc.ContactCallback.OnBeginContactFunction = [&](PhysicsContact contact)
 		{
-			Entity e = m_Entity.GetScene()->FindByID(info.OtherUUID);
-			auto& sprite = e.GetComponent<SpriteComponent>();
-			if (sprite.Color != glm::vec4{1.0f})
+			auto& sprite = contact.Other->GetComponent<SpriteComponent>();
+			if (sprite.Color != glm::vec4{ 1.0f })
 				m_Entity.GetComponent<SpriteComponent>().Color = sprite.Color;
 		};
 	}
@@ -25,10 +24,10 @@ public:
 	{
 		if (m_Timer == 0.0f)
 		{
+			m_Timer = Random::Float(1.0f, 3.0f);
 			float ix = Random::Float(-200.0f, 200.0f);
 			float iy = Random::Float(-200.0f, 200.0f);
 			m_Body->ApplyLinearImpulse({ ix, iy }, m_Body->GetWorldCenter(), true);
-			m_Timer = Random::Float(1.0f, 3.0f);
 		}
 
 		m_Timer = glm::max(m_Timer - ts, 0.0f);

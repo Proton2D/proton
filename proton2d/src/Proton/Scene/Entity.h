@@ -177,6 +177,8 @@ namespace proton {
 		friend class Scene;
 		friend class SceneSerializer;
 		friend class EntityScript;
+		friend class PhysicsWorld;
+		friend class PhysicsContactListener;
 
 		friend class InspectorPanel;
 		friend class SceneViewportPanel;

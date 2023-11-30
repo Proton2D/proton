@@ -47,6 +47,8 @@ namespace proton {
 			m_ScriptFields[name] = { type, field };
 		}
 
+		Scene* GetScene() { return m_Entity.GetScene(); }
+
 	protected:
 		Entity m_Entity;
 		

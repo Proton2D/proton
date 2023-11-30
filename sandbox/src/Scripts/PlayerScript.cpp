@@ -26,18 +26,17 @@ void PlayerScript::OnCreate()
 	m_FootSensor = m_Entity.GetScene()->FindByTag("FootSensor");
 	if (m_FootSensor)
 	{
-		proton::UUID playerUUID = m_Entity.GetUUID();
 		auto& bc = m_FootSensor.GetComponent<BoxColliderComponent>();
 
-		bc.ContactCallback.OnBeginContactFunction = [&, playerUUID](PhysicsContactInfo info)
+		bc.ContactCallback.OnBeginContactFunction = [&](PhysicsContact contact)
 		{
-			if (info.OtherUUID != playerUUID)
+			if (*contact.Other != m_Entity)
 				m_ContactCount++;
 		};
 
-		bc.ContactCallback.OnEndContactFunction = [&, playerUUID](PhysicsContactInfo info)
+		bc.ContactCallback.OnEndContactFunction = [&](PhysicsContact contact)
 		{
-			if (info.OtherUUID != playerUUID)
+			if (*contact.Other != m_Entity)
 				m_ContactCount--;
 		};
 	}

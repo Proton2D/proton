@@ -5,8 +5,9 @@
 #include <box2d/b2_contact.h>
 #include <box2d/b2_world_callbacks.h>
 
-
 namespace proton {
+
+	class Scene;
 
 	struct PhysicsMaterial
 	{
@@ -16,24 +17,24 @@ namespace proton {
 		float Density = 0.5f;
 	};
 
-	struct PhysicsContactInfo
+	struct PhysicsContact
 	{
-		UUID OtherUUID;
+		Entity* Other;
 		b2Contact* Contact;
 	};
 
 	struct PhysicsContactCallback
 	{
-		std::function<void(PhysicsContactInfo info)> 
+		std::function<void(PhysicsContact contact)> 
 			OnBeginContactFunction = nullptr;
 
-		std::function<void(PhysicsContactInfo info)>
+		std::function<void(PhysicsContact contact)>
 			OnEndContactFunction = nullptr;
 
-		std::function<void(PhysicsContactInfo info, const b2Manifold* oldManifold)>
+		std::function<void(PhysicsContact contact, const b2Manifold* oldManifold)>
 			OnPreSolveFunction = nullptr;
 
-		std::function<void(PhysicsContactInfo info, const b2ContactImpulse* impulse)> 
+		std::function<void(PhysicsContact contact, const b2ContactImpulse* impulse)>
 			OnPostSolveFunction = nullptr;
 	};
 

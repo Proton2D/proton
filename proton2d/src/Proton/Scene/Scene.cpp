@@ -17,14 +17,13 @@
 namespace proton {
 
 	Scene::Scene(const std::string& name)
-		: m_SceneName(name), m_PhysicsWorld(new PhysicsWorld(this))
+		: m_SceneName(name), m_PhysicsWorld(MakeUnique<PhysicsWorld>(this))
 	{
 	}
 
 	Scene::~Scene()
 	{
 		DestroyAll();
-		delete m_PhysicsWorld;
 	}
 
 	void Scene::BeginPlay()
@@ -79,7 +78,7 @@ namespace proton {
 
 		if (entity.HasComponent<RigidbodyComponent>())
 		{
-			if (m_EnablePhysics && m_PhysicsWorld->IsIntialized())
+			if (m_EnablePhysics && m_PhysicsWorld)
 				m_PhysicsWorld->DestroyRuntimeBody(entity.GetUUID());	
 		}
 
@@ -147,7 +146,7 @@ namespace proton {
 		if (m_SceneState == SceneState::Play)
 		{
 			// Update physics
-			if (m_EnablePhysics && m_PhysicsWorld->IsIntialized())
+			if (m_EnablePhysics && m_PhysicsWorld)
 			{
 				PROFILE_SCOPE("update_physics");
 				m_PhysicsWorld->Update(ts);
@@ -332,14 +331,14 @@ namespace proton {
 
 	b2Body* Scene::GetRuntimeBody(UUID id)
 	{
-		PT_ASSERT(m_EnablePhysics && m_PhysicsWorld->IsIntialized(), "Physics world is not initialized");
+		PT_ASSERT(m_EnablePhysics && m_PhysicsWorld, "Physics world is not initialized");
 		return m_PhysicsWorld->GetRuntimeBody(id);
 	}
 
 	// TODO: Remove
 	b2Body* Scene::CreateRuntimeBody(Entity entity)
 	{
-		if (!m_EnablePhysics || !m_PhysicsWorld->IsIntialized()) return nullptr;
+		if (!m_EnablePhysics || !m_PhysicsWorld) return nullptr;
 		return m_PhysicsWorld->CreateRuntimeBody(entity);
 	}
 

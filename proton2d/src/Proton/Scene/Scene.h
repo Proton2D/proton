@@ -126,7 +126,7 @@ namespace proton {
 
 		// Physics
 		bool m_EnablePhysics = true;
-		PhysicsWorld* m_PhysicsWorld = nullptr;
+		Unique<PhysicsWorld> m_PhysicsWorld;
 
 		// Cache
 		glm::vec3 m_PrimaryCameraPosition = { 0.0f, 0.0f, 0.0f };

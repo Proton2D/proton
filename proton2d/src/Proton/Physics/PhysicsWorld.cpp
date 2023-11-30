@@ -59,21 +59,23 @@ namespace proton {
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& uuid = entity.GetComponent<IDComponent>().ID;
 
-			b2FixtureDef fixtureDef; b2PolygonShape shape;
-			m_FixtureUserData.push_back(MakeUnique<UUID>(uuid));
-
+			b2PolygonShape shape;
 			shape.SetAsBox(bc.Size.x * transform.Scale.x / 2.0f,
 				bc.Size.y * transform.Scale.y / 2.0f, { bc.Offset.x, bc.Offset.y }, 0);
 
-			const PhysicsMaterial& material = bc.Material;
+			b2FixtureDef fixtureDef;
+			m_FixtureUserData.push_back(new Entity(entity.m_Handle, m_Scene));
+			fixtureDef.userData.pointer = (uintptr_t)(m_FixtureUserData.back());
+
 			fixtureDef.shape = &shape;
-			fixtureDef.friction = material.Friction;
-			fixtureDef.restitution = material.Restitution;
-			fixtureDef.restitutionThreshold = material.RestitutionThreshold;
-			fixtureDef.density = material.Density;
+			fixtureDef.friction = bc.Material.Friction;
+			fixtureDef.restitution = bc.Material.Restitution;
+			fixtureDef.restitutionThreshold = bc.Material.RestitutionThreshold;
+			fixtureDef.density = bc.Material.Density;
 			fixtureDef.isSensor = bc.IsSensor;
 			fixtureDef.filter = bc.Filter;
-			fixtureDef.userData.pointer = reinterpret_cast<uintptr_t>(m_FixtureUserData.back().get());
+
+			
 			body->CreateFixture(&fixtureDef);
 		}
 	}
@@ -113,6 +115,8 @@ namespace proton {
 			delete m_World;
 			m_World = nullptr;
 		}
+		for (Entity* entity : m_FixtureUserData)
+			delete entity;
 		m_RuntimeBodies.clear();
 		m_FixtureUserData.clear();
 	}
@@ -136,59 +140,34 @@ namespace proton {
 	{
 	}
 
-#define GET_CONTACT_ENTITIES()\
-	b2Fixture* fixtureA = contact->GetFixtureA();\
-	b2Fixture* fixtureB = contact->GetFixtureB();\
-	UUID uuidA = *(UUID*)(fixtureA->GetUserData().pointer);\
-	UUID uuidB = *(UUID*)(fixtureB->GetUserData().pointer);\
-	Entity entityA = m_Scene->FindByID(uuidA);\
-	Entity entityB = m_Scene->FindByID(uuidB);\
-	if (!entityA.IsValid() || !entityB.IsValid()) return; \
-	auto& bcA = entityA.GetComponent<BoxColliderComponent>();\
-	auto& bcB = entityB.GetComponent<BoxColliderComponent>();
+#define CALL_CONTACT_CALLBACK_FUNCTION(callback_func, ...) \
+	Entity* entityA = (Entity*)(contact->GetFixtureA()->GetUserData().pointer); \
+	Entity* entityB = (Entity*)(contact->GetFixtureB()->GetUserData().pointer); \
+	auto& bcA = entityA->GetComponent<BoxColliderComponent>(); \
+	auto& bcB = entityB->GetComponent<BoxColliderComponent>(); \
+	if (bcA.ContactCallback.callback_func) \
+		bcA.ContactCallback.callback_func(PhysicsContact{ entityB, contact }, __VA_ARGS__); \
+	if (bcB.ContactCallback.callback_func) \
+		bcB.ContactCallback.callback_func(PhysicsContact{ entityA, contact }, __VA_ARGS__); \
 
 	void PhysicsContactListener::BeginContact(b2Contact* contact)
 	{
-		GET_CONTACT_ENTITIES();
-
-		if (bcA.ContactCallback.OnBeginContactFunction)
-			bcA.ContactCallback.OnBeginContactFunction({ uuidB, contact });
-
-		if (bcB.ContactCallback.OnBeginContactFunction)
-			bcB.ContactCallback.OnBeginContactFunction({ uuidA, contact });
+		CALL_CONTACT_CALLBACK_FUNCTION(OnBeginContactFunction);
 	}
 
 	void PhysicsContactListener::EndContact(b2Contact* contact)
 	{
-		GET_CONTACT_ENTITIES();
-
-		if (bcA.ContactCallback.OnEndContactFunction)
-			bcA.ContactCallback.OnEndContactFunction({ uuidB, contact });
-
-		if (bcB.ContactCallback.OnEndContactFunction)
-			bcB.ContactCallback.OnEndContactFunction({ uuidA, contact });
+		CALL_CONTACT_CALLBACK_FUNCTION(OnEndContactFunction);
 	}
 
 	void PhysicsContactListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 	{
-		GET_CONTACT_ENTITIES();
-
-		if (bcA.ContactCallback.OnPreSolveFunction)
-			bcA.ContactCallback.OnPreSolveFunction({ uuidB, contact }, oldManifold);
-
-		if (bcB.ContactCallback.OnPreSolveFunction)
-			bcB.ContactCallback.OnPreSolveFunction({ uuidA, contact }, oldManifold);
+		CALL_CONTACT_CALLBACK_FUNCTION(OnPreSolveFunction, oldManifold);
 	}
 
 	void PhysicsContactListener::PostSolve(b2Contact* contact, const b2ContactImpulse* impulse)
 	{
-		GET_CONTACT_ENTITIES();
-
-		if (bcA.ContactCallback.OnPostSolveFunction)
-			bcA.ContactCallback.OnPostSolveFunction({ uuidB, contact }, impulse);
-
-		if (bcB.ContactCallback.OnPostSolveFunction)
-			bcB.ContactCallback.OnPostSolveFunction({ uuidA, contact }, impulse);
+		CALL_CONTACT_CALLBACK_FUNCTION(OnPostSolveFunction, impulse);
 	}
 
 }
