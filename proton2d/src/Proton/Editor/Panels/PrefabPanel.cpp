@@ -26,8 +26,7 @@ namespace proton {
 				Entity entity = PrefabManager::SpawnPrefab(m_ActiveScene, tag);
 				auto& transform = entity.GetComponent<TransformComponent>();
 				glm::vec2 cameraPos = m_ActiveScene->GetPrimaryCameraPosition();
-				transform.Position.x = cameraPos.x;
-				transform.Position.y = cameraPos.y;
+				entity.SetWorldPosition({ cameraPos.x, cameraPos.y, transform.WorldPosition.z });
 			}
 			ImGui::SameLine();
 			if (ImGui::Button(("X##" + tag).c_str(), { 25, 25 }))

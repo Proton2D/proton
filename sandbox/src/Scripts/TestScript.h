@@ -7,7 +7,7 @@ class TestScript : public EntityScript
 public:
 	ENTITY_SCRIPT_CLASS(TestScript)
 
-	virtual void OnCreate() override
+	virtual bool OnCreate() override
 	{
 		m_Body = m_Entity.GetRuntimeBody();
 		auto& bc = m_Entity.GetComponent<BoxColliderComponent>();
@@ -18,6 +18,7 @@ public:
 			if (sprite.Color != glm::vec4{ 1.0f })
 				m_Entity.GetComponent<SpriteComponent>().Color = sprite.Color;
 		};
+		return true;
 	}
 
 	virtual void OnUpdate(float ts) override

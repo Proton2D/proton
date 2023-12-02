@@ -30,7 +30,7 @@ namespace proton {
 
 	bool SceneSerializer::Serialize(const std::string& filepath)
 	{
-		PT_ASSERT(m_Scene, "Scene context not set!");
+		PT_CORE_ASSERT(m_Scene, "Scene context not set!");
 		const auto& c = m_Scene->m_ClearColor;
 		json jsonObj = {
 			{ "SceneName",          m_Scene->m_SceneName },
@@ -93,7 +93,7 @@ namespace proton {
 				UUID id{ jsonObj["PrimaryCameraEntity"] };
 				m_Scene->SetPrimaryCameraEntity(m_Scene->FindByID(id));
 			}
-
+			m_Scene->CalculateWorldPositions(false);
 			return true;
 		}
 		return false;
@@ -120,7 +120,7 @@ namespace proton {
 
 		// Serialize TransformComponent
 		auto& transform = entity.GetComponent<TransformComponent>();
-		auto& position = transform.Position;
+		auto& position = transform.LocalPosition;
 		jsonObj["Transform"] = 
 		{
 			{ "Position", { round(position.x), round(position.y), round(position.z) } },
@@ -299,7 +299,7 @@ namespace proton {
 	Entity SceneSerializer::DeserializeEntity(json jsonObj, bool deserializeUUID)
 	{
 		Entity entity = deserializeUUID ? 
-			m_Scene->CreateEntityWithID((uint64_t)jsonObj["UUID"], jsonObj["Tag"]) :
+			m_Scene->CreateEntityWithUUID((uint64_t)jsonObj["UUID"], jsonObj["Tag"]) :
 			m_Scene->CreateEntity(jsonObj["Tag"]);
 
 		// Deserialize TransformComponent
@@ -307,7 +307,8 @@ namespace proton {
 		json& position = jsonObj["Transform"]["Position"];
 		json& scale    = jsonObj["Transform"]["Scale"];
 		json& rotation = jsonObj["Transform"]["Rotation"];
-		transform.Position = { position[0], position[1], position[2] };
+		transform.WorldPosition = { position[0], position[1], position[2] };
+		transform.LocalPosition = { position[0], position[1], position[2] };
 		transform.Scale    = { scale[0], scale[1] };
 		transform.Rotation = rotation;
 
@@ -453,7 +454,7 @@ namespace proton {
 		{
 			json& entities = jsonObj["Entities"];
 			for (auto it = entities.rbegin(); it != entities.rend(); it++)
-				entity.AddChildEntity(DeserializeEntity(*it, deserializeUUID));
+				entity.AddChildEntity(DeserializeEntity(*it, deserializeUUID), false);
 		}
 
 		return entity;

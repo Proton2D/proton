@@ -11,6 +11,7 @@ using namespace proton;
 void MainLayer::OnCreate()
 {
 	SceneManager::Load("level_1");
+	SceneManager::Load("level_2");
 	SceneManager::SetActiveScene("level_1");
 }
 
@@ -42,7 +43,7 @@ Entity MainLayer::SpawnRandomBox(const glm::vec2& position)
 	entity.AddComponent<BoxColliderComponent>();
 
 	auto& transform = entity.GetComponent<TransformComponent>();
-	transform.Position = { position.x, position.y, 0 };
+	transform.WorldPosition = { position.x, position.y, 0 };
 	transform.Rotation = Random::Float(0.0f, 80.0f);
 	float scale = Random::Float(1.0f, 1.5f);
 	transform.Scale = { scale, scale };

@@ -7,8 +7,6 @@
 
 namespace proton {
 
-	class Scene;
-
 	struct PhysicsMaterial
 	{
 		float Friction = 0.5f;

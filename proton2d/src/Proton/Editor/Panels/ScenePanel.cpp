@@ -3,6 +3,7 @@
 #include "Proton/Editor/Panels/ScenePanel.h"
 #include "Proton/Editor/EditorLayer.h"
 #include "Proton/Scene/SceneManager.h"
+#include "Proton/Physics/PhysicsWorld.h"
 #include "Proton/Utils/Utils.h"
 
 #include <imgui.h>
@@ -34,6 +35,10 @@ namespace proton {
 				std::string filepath = m_ActiveScene->GetFilepath();
 				if (filepath.size())
 				{
+					Scene* scene = SceneManager::GetActiveScene();
+					if (scene->m_PhysicsWorld->IsInitialized())
+						scene->m_PhysicsWorld->DestroyWorld();
+					scene->m_SceneState = SceneState::Stop;
 					SceneManager::EditorLoadFromCache(filepath);
 					SceneManager::SetActiveScene(filepath);
 				}

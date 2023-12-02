@@ -21,13 +21,13 @@ namespace proton {
 
 	b2Body* PhysicsWorld::GetRuntimeBody(UUID id)
 	{
-		PT_ASSERT(m_RuntimeBodies.find(id) != m_RuntimeBodies.end(), "Runtime body not found!");
+		PT_CORE_ASSERT(m_RuntimeBodies.find(id) != m_RuntimeBodies.end(), "Runtime body not found!");
 		return m_RuntimeBodies.at(id);
 	}
 
 	void PhysicsWorld::DestroyRuntimeBody(UUID id)
 	{
-		PT_ASSERT(m_RuntimeBodies.find(id) != m_RuntimeBodies.end(), "Runtime body not found!");
+		PT_CORE_ASSERT(m_RuntimeBodies.find(id) != m_RuntimeBodies.end(), "Runtime body not found!");
 		m_World->DestroyBody(m_RuntimeBodies.at(id));
 		m_RuntimeBodies.erase(id);
 	}
@@ -40,7 +40,7 @@ namespace proton {
 
 		b2BodyDef bodyDef;
 		bodyDef.type = rb.Type;
-		bodyDef.position.Set(transform.Position.x, transform.Position.y);
+		bodyDef.position.Set(transform.WorldPosition.x, transform.WorldPosition.y);
 		bodyDef.angle = glm::radians(transform.Rotation);
 
 		b2Body* body = m_World->CreateBody(&bodyDef);
@@ -64,8 +64,8 @@ namespace proton {
 				bc.Size.y * transform.Scale.y / 2.0f, { bc.Offset.x, bc.Offset.y }, 0);
 
 			b2FixtureDef fixtureDef;
-			m_FixtureUserData.push_back(new Entity(entity.m_Handle, m_Scene));
-			fixtureDef.userData.pointer = (uintptr_t)(m_FixtureUserData.back());
+			m_FixtureUserData.push_back(MakeUnique<Entity>(entity.m_Handle, m_Scene));
+			fixtureDef.userData.pointer = (uintptr_t)(m_FixtureUserData.back().get());
 
 			fixtureDef.shape = &shape;
 			fixtureDef.friction = bc.Material.Friction;
@@ -115,8 +115,6 @@ namespace proton {
 			delete m_World;
 			m_World = nullptr;
 		}
-		for (Entity* entity : m_FixtureUserData)
-			delete entity;
 		m_RuntimeBodies.clear();
 		m_FixtureUserData.clear();
 	}
@@ -129,8 +127,8 @@ namespace proton {
 		{
 			auto [id, transform] = view.get<IDComponent, TransformComponent>(entity);
 			b2Body* body = m_RuntimeBodies.at(id.ID);
-			transform.Position.x = body->GetPosition().x;
-			transform.Position.y = body->GetPosition().y;
+			transform.WorldPosition.x = body->GetPosition().x;
+			transform.WorldPosition.y = body->GetPosition().y;
 			transform.Rotation = glm::degrees(body->GetAngle());
 		}
 	}
@@ -143,6 +141,7 @@ namespace proton {
 #define CALL_CONTACT_CALLBACK_FUNCTION(callback_func, ...) \
 	Entity* entityA = (Entity*)(contact->GetFixtureA()->GetUserData().pointer); \
 	Entity* entityB = (Entity*)(contact->GetFixtureB()->GetUserData().pointer); \
+	if (!entityA->IsValid() || !entityB->IsValid()) return; \
 	auto& bcA = entityA->GetComponent<BoxColliderComponent>(); \
 	auto& bcB = entityB->GetComponent<BoxColliderComponent>(); \
 	if (bcA.ContactCallback.callback_func) \

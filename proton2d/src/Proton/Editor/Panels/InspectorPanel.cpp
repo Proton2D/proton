@@ -128,13 +128,13 @@ namespace proton {
 				ImGui::Text("Position");
 				ImGui::NextColumn();
 				ImGui::PushItemWidth(75.0f);
-				ImGui::DragFloat("##P_X", &component.Position.x, 0.01f, 0.0f, 0.0f, "%.3f");
+				ImGui::DragFloat("##P_X", &component.LocalPosition.x, 0.01f, 0.0f, 0.0f, "%.3f");
 				ImGui::SameLine();
 				ImGui::PushItemWidth(75.0f);
-				ImGui::DragFloat("##P_Y", &component.Position.y, 0.01f, 0.0f, 0.0f, " %.3f");
+				ImGui::DragFloat("##P_Y", &component.LocalPosition.y, 0.01f, 0.0f, 0.0f, " %.3f");
 				ImGui::SameLine();
 				ImGui::PushItemWidth(75.0f);
-				ImGui::DragFloat("##P_Z", &component.Position.z, 0.0001f, 0.0f, 0.0f, "%.3f");
+				ImGui::DragFloat("##P_Z", &component.LocalPosition.z, 0.0001f, 0.0f, 0.0f, "%.3f");
 				ImGui::Columns(1);
 
 				// Scale

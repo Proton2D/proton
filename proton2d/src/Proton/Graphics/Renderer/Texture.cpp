@@ -56,7 +56,7 @@ namespace proton {
 				m_DataFormat = GL_RGB;
 			}
 
-			PT_ASSERT(m_InternalFormat & m_DataFormat && "Format not supported!");
+			PT_CORE_ASSERT(m_InternalFormat & m_DataFormat && "Format not supported!");
 
 			glCreateTextures(GL_TEXTURE_2D, 1, &m_Object_ID);
 			glTextureStorage2D(m_Object_ID, 1, m_InternalFormat, m_Width, m_Height);
@@ -78,7 +78,7 @@ namespace proton {
 	void Texture::SetData(void* data, size_t size)
 	{
 		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
-		PT_ASSERT(size == m_Width * m_Height * bpp && "Data must be entire texture!");
+		PT_CORE_ASSERT(size == m_Width * m_Height * bpp && "Data must be entire texture!");
 		glTextureSubImage2D(m_Object_ID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
 	}
 

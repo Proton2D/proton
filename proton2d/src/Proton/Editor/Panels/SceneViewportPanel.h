@@ -18,7 +18,6 @@ namespace proton {
 		void ResetCameraPosition();
 
 	private:
-		void DrawSceneTabs();
 		void DrawCollidersAndSelectionOutline();
 
 	private:

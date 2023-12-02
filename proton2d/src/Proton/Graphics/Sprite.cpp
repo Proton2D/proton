@@ -42,7 +42,7 @@ namespace proton {
 
 	void Sprite::SetTile(uint32_t x, uint32_t y)
 	{
-		PT_ASSERT(m_Spritesheet, "Sprite doesn't have spritesheet attached!");
+		PT_CORE_ASSERT(m_Spritesheet, "Sprite doesn't have spritesheet attached!");
 		glm::uvec2 count = m_Spritesheet->GetTileCount();
 		x %= count.x; y %= count.y;
 		m_TilePos = { x, y };

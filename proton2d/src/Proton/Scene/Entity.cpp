@@ -107,7 +107,7 @@ namespace proton
 		m_Scene->DestroyChildEntities(*this);
 	}
 
-	void Entity::AddChildEntity(Entity child)
+	void Entity::AddChildEntity(Entity child, bool refreshChildWorldPosition)
 	{
 		auto& parentComponent = GetComponent<RelationshipComponent>();
 		auto& childComponent = child.GetComponent<RelationshipComponent>();
@@ -123,6 +123,14 @@ namespace proton
 
 		parentComponent.First = child.m_Handle;
 		parentComponent.ChildrenCount++;
+
+		std::vector<Entity>& sceneRoot = m_Scene->m_Root;
+		auto it = std::find(sceneRoot.begin(), sceneRoot.end(), child);
+		if (it != sceneRoot.end())
+			sceneRoot.erase(it);
+
+		if (refreshChildWorldPosition)
+			child.SetWorldPosition(child.GetTransform().WorldPosition);
 	}
 
 	void Entity::PopHierarchy()
@@ -152,6 +160,10 @@ namespace proton
 			rc.Next = entt::null;
 			rc.Prev = entt::null;
 			rc.Parent = entt::null;
+
+			m_Scene->m_Root.push_back(*this);
+			auto& transform = GetTransform();
+			transform.LocalPosition = transform.WorldPosition;
 		}
 	}
 
@@ -176,4 +188,15 @@ namespace proton
 
 		return false;
 	}
+
+	void Entity::SetWorldPosition(const glm::vec3& position)
+	{
+		m_Scene->SetEntityWorldPosition(*this, position);
+	}
+
+	void Entity::SetLocalPosition(const glm::vec3& position)
+	{
+		m_Scene->SetEntityLocalPosition(*this, position);
+	}
+
 }

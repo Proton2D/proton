@@ -10,7 +10,7 @@ void ParallaxBackground::OnRegisterFields()
 	RegisterField(ScriptFieldType::Float, "PositionOffset", &m_PositionOffset);
 }
 
-void ParallaxBackground::OnCreate()
+bool ParallaxBackground::OnCreate()
 {
 	m_Scene = m_Entity.GetScene();
 	auto& camera = m_Scene->GetPrimaryCamera();
@@ -24,10 +24,11 @@ void ParallaxBackground::OnCreate()
 	{
 		Entity e = m_Scene->CreateEntity(m_Entity.GetTag() + "-" + std::to_string(i));
 		e.AddComponent<SpriteComponent>().Sprite.SetTexture(sprite.GetTexture());
-		e.GetTransform().Position.z = m_Entity.GetTransform().Position.z;
+		e.GetTransform().WorldPosition.z = m_Entity.GetTransform().WorldPosition.z;
 		m_Entity.AddChildEntity(e);
 		m_Copies.push_back(e); 
 	}
+	return true;
 }
 
 void ParallaxBackground::OnUpdate(float ts)
@@ -43,15 +44,15 @@ void ParallaxBackground::OnUpdate(float ts)
 	
 	auto& transform = m_Entity.GetTransform();
 	transform.Scale = scale;
-	transform.Position.x = position - offset;
-	transform.Position.y = cameraPos.y;
+	transform.WorldPosition.x = position - offset;
+	transform.WorldPosition.y = cameraPos.y;
 
 	for (Entity copy : m_Copies)
 	{
 		auto& transform = copy.GetTransform();
 		position += scale.x;
 		transform.Scale = scale;
-		transform.Position.x = position - offset;
-		transform.Position.y = cameraPos.y;
+		transform.WorldPosition.x = position - offset;
+		transform.WorldPosition.y = cameraPos.y;
 	}
 }

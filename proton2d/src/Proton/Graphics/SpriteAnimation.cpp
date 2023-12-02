@@ -31,7 +31,7 @@ namespace proton {
 
     void SpriteAnimation::SetAnimation(uint16_t index, bool mirror_x, bool mirror_y)
     {
-        PT_ASSERT(m_AnimationsFrameCount.find(index) != m_AnimationsFrameCount.end(), "Animation not found");
+        PT_CORE_ASSERT(m_AnimationsFrameCount.find(index) != m_AnimationsFrameCount.end(), "Animation not found");
         if (index != m_CurrentAnimationIndex)
         {
             m_CurrentAnimationIndex = index;

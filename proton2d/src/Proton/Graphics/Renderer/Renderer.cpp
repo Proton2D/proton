@@ -305,6 +305,27 @@ namespace proton {
 		data.LineVertexCount += 2;
 	}
 
+	void Renderer::DrawDashedLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, float lineScale)
+	{
+		float dashLength = 0.06f * lineScale;
+		float spaceLength = 0.04f * lineScale;
+		glm::vec3 direction = glm::normalize(p1 - p0);
+		float totalLength = glm::distance(p0, p1);
+		float currentLength = 0.0f;
+
+		while (currentLength < totalLength) 
+		{
+			float dashEnd = currentLength + dashLength;
+			if (dashEnd > totalLength) dashEnd = totalLength;
+
+			glm::vec3 dashStartPoint = p0 + direction * currentLength;
+			glm::vec3 dashEndPoint = p0 + direction * dashEnd;
+			DrawLine(dashStartPoint, dashEndPoint, color);
+
+			currentLength = dashEnd + spaceLength;
+		}
+	}
+
 	void Renderer::DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
 		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
@@ -328,6 +349,18 @@ namespace proton {
 		DrawLine(lineVertices[1], lineVertices[2], color);
 		DrawLine(lineVertices[2], lineVertices[3], color);
 		DrawLine(lineVertices[3], lineVertices[0], color);
+	}
+
+	void Renderer::DrawDashedRect(const glm::mat4& transform, const glm::vec4& color, float lineScale)
+	{
+		glm::vec3 lineVertices[4];
+		for (size_t i = 0; i < 4; i++)
+			lineVertices[i] = transform * QuadVertexPositions[i];
+
+		DrawDashedLine(lineVertices[0], lineVertices[1], color, lineScale);
+		DrawDashedLine(lineVertices[1], lineVertices[2], color, lineScale);
+		DrawDashedLine(lineVertices[2], lineVertices[3], color, lineScale);
+		DrawDashedLine(lineVertices[3], lineVertices[0], color, lineScale);
 	}
 
 	void Renderer::SetLineWidth(float width)

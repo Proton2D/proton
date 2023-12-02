@@ -18,14 +18,14 @@ namespace proton {
 		template <typename T>
 		T& GetComponent() const
 		{
-			PT_ASSERT(HasComponent<T>(), "Entity does not have component!");
+			PT_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
 			return m_Scene->m_Registry.get<T>(m_Handle);
 		}
 
 		template <typename T, typename... Types>
 		T& AddComponent(Types&& ...args) const
 		{
-			PT_ASSERT(!HasComponent<T>(), "Entity already have component!");
+			PT_CORE_ASSERT(!HasComponent<T>(), "Entity already have component!");
 			return m_Scene->m_Registry.emplace<T>(m_Handle, std::forward<Types>(args)...);
 		}
 
@@ -33,8 +33,8 @@ namespace proton {
 		template<>
 		ResizableSpriteComponent& AddComponent() const
 		{
-			PT_ASSERT(!HasComponent<ResizableSpriteComponent>(), "Entity already has component!");
-			PT_ASSERT(HasComponent<TransformComponent>(), "Entity does not have TransformComponent!");
+			PT_CORE_ASSERT(!HasComponent<ResizableSpriteComponent>(), "Entity already has component!");
+			PT_CORE_ASSERT(HasComponent<TransformComponent>(), "Entity does not have TransformComponent!");
 			auto& sprite = m_Scene->m_Registry.emplace<ResizableSpriteComponent>(m_Handle);
 			sprite.ResizableSprite.m_Transform = &GetComponent<TransformComponent>();
 			return sprite;
@@ -44,10 +44,10 @@ namespace proton {
 		template<>
 		SpriteAnimationComponent& AddComponent() const
 		{
-			PT_ASSERT(!HasComponent<SpriteAnimationComponent>(), "Entity already has component!");
-			PT_ASSERT(HasComponent<SpriteComponent>(), "Entity must have SpriteComponent!");
+			PT_CORE_ASSERT(!HasComponent<SpriteAnimationComponent>(), "Entity already has component!");
+			PT_CORE_ASSERT(HasComponent<SpriteComponent>(), "Entity must have SpriteComponent!");
 			auto& sprite = GetComponent<SpriteComponent>().Sprite;
-			PT_ASSERT(sprite.m_Spritesheet, "Entity must have Spritesheet Texture!");
+			PT_CORE_ASSERT(sprite.m_Spritesheet, "Entity must have Spritesheet Texture!");
 
 			auto& fb = m_Scene->m_Registry.emplace<SpriteAnimationComponent>(m_Handle);
 			fb.SpriteAnimation = MakeShared<SpriteAnimation>(&sprite);
@@ -63,7 +63,7 @@ namespace proton {
 
 			auto& component = GetComponent<ScriptComponent>();
 			std::string className{ TScriptClass::__ScriptClassName };
-			PT_ASSERT(component.Scripts.find(className) == component.Scripts.end(), "The script is already attached to an Entity!");
+			PT_CORE_ASSERT(component.Scripts.find(className) == component.Scripts.end(), "The script is already attached to an Entity!");
 
 			EntityScript*& scriptInstance = component.Scripts[className];
 			scriptInstance = new TScriptClass();
@@ -78,7 +78,7 @@ namespace proton {
 		template <typename T>
 		void RemoveComponent()
 		{
-			PT_ASSERT(HasComponent<T>(), "Entity does not have a component!");
+			PT_CORE_ASSERT(HasComponent<T>(), "Entity does not have a component!");
 			
 			if (std::is_base_of<ScriptComponent, T>::value)
 				TerminateScripts();
@@ -111,6 +111,10 @@ namespace proton {
 		// Get TransformComponent
 		TransformComponent& GetTransform();
 
+		void SetWorldPosition(const glm::vec3& position);
+		
+		void SetLocalPosition(const glm::vec3& position);
+
 		// Get pointer to scene
 		Scene* GetScene() { return m_Scene; }
 
@@ -127,7 +131,7 @@ namespace proton {
 		void Destroy();
 
 		// Add child Entity given as parameter
-		void AddChildEntity(Entity child);
+		void AddChildEntity(Entity child, bool refreshChildWorldPosition = true);
 
 		// Destroy all child entities
 		void DestroyChildEntities();

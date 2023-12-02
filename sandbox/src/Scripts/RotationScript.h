@@ -11,9 +11,10 @@ public:
 		RegisterField(ScriptFieldType::Float, "RotationSpeed", &m_RotationSpeed);
 	}
 
-	virtual void OnCreate() override
+	virtual bool OnCreate() override
 	{
 		m_Body = m_Entity.GetRuntimeBody();
+		return true;
 	}
 
 	virtual void OnUpdate(float ts) override

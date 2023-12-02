@@ -31,6 +31,7 @@ namespace proton {
 		b2Body* CreateRuntimeBody(Entity entity);
 		void DestroyRuntimeBody(UUID id);
 
+		bool IsInitialized() { return m_World; }
 		operator bool() const { return m_World; }
 
 	private:
@@ -45,7 +46,7 @@ namespace proton {
 		Scene* m_Scene = nullptr;
 
 		std::unordered_map<UUID, b2Body*> m_RuntimeBodies;
-		std::vector<Entity*> m_FixtureUserData; // persistent storage
+		std::vector<Unique<Entity>> m_FixtureUserData; // persistent storage
 
 		int m_PhysicsVelocityIterations = 5;
 		int m_PhysicsPositionIterations = 5;
@@ -55,6 +56,7 @@ namespace proton {
 
 		friend class Scene;
 		friend class SceneSerializer;
+		friend class ScenePanel;
 		friend class InspectorPanel;
 	};
 

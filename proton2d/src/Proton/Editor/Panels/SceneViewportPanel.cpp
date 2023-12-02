@@ -24,6 +24,7 @@ namespace proton {
 
 	void SceneViewportPanel::OnImGuiRender()
 	{
+		// Scene Viewport
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
 		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
@@ -49,13 +50,13 @@ namespace proton {
 
 	void SceneViewportPanel::OnUpdate(float ts)
 	{
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		// On viewport resize
 		FramebufferSpecification spec = m_Framebuffer->GetSpecification();
 		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
 			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_Camera.OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 			Renderer::SetViewport(0, 0, (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
@@ -85,8 +86,8 @@ namespace proton {
 		{
 			glm::vec2 targetPos = cursor + m_SelectionMouseOffset;
 			auto& transform = m_SelectedEntity.GetComponent<TransformComponent>();
-			transform.Position.x = targetPos.x;
-			transform.Position.y = targetPos.y;
+			transform.LocalPosition.y += targetPos.y - transform.WorldPosition.y;
+			transform.LocalPosition.x += targetPos.x - transform.WorldPosition.x;
 			ImGui::SetMouseCursor(7);
 		}
 
@@ -127,31 +128,28 @@ namespace proton {
 
 				for (auto& entity : m_ActiveScene->GetEntitiesOnCursorLocation())
 				{
+					if (!entity.HasComponent<SpriteComponent>() && !entity.HasComponent<ResizableSpriteComponent>())
+						continue;
+
 					auto& transform = entity.GetComponent<TransformComponent>();
-					if (!target || transform.Position.z > transformMaxZ)
+					if (!target || transform.WorldPosition.z > transformMaxZ)
 					{
 						target = entity;
-						transformMaxZ = transform.Position.z;
+						transformMaxZ = transform.WorldPosition.z;
 					}
 				}
 
 				if (m_SelectedEntity && m_ActiveScene->IsCursorHoveringEntity(m_SelectedEntity))
 				{
-					auto& transform = m_SelectedEntity.GetComponent<TransformComponent>();
-					auto& targetTransform = target.GetComponent<TransformComponent>();
-					if (transform.Scale.x < targetTransform.Scale.x
-						&& transform.Scale.y < targetTransform.Scale.y)
-					{
-						// Discard selection
-						target = m_SelectedEntity;
-					}
+					// Discard selection
+					target = m_SelectedEntity;
 				}
 
 				if (target && target == m_SelectedEntity)
 				{
 					m_MoveSelectedEntity = true;
 					auto& transform = m_SelectedEntity.GetComponent<TransformComponent>();
-					m_SelectionMouseOffset = glm::vec2{ transform.Position.x, transform.Position.y } - cursor;
+					m_SelectionMouseOffset = glm::vec2{ transform.WorldPosition.x, transform.WorldPosition.y } - cursor;
 				}
 
 				EditorLayer::Get()->SelectEntity(target);
@@ -224,7 +222,7 @@ namespace proton {
 				float zPos = (m_ShowAllColliders && drawSelected) ? 0.205f : 0.2f;
 				glm::vec4 color = (m_ShowAllColliders && drawSelected)
 					? glm::vec4{ 0.9f, 0.3f, 0.3f, 0.5f } : glm::vec4{ 0.9f, 0.6f, 0.3f, 0.5f };
-				glm::vec3 position = { transform.Position.x + bc.Offset.x, transform.Position.y + bc.Offset.y, zPos };
+				glm::vec3 position = { transform.WorldPosition.x + bc.Offset.x, transform.WorldPosition.y + bc.Offset.y, zPos };
 				glm::vec3 scale = { bc.Size.x * transform.Scale.x, bc.Size.y * transform.Scale.y, 1.0f };
 				glm::mat4 transformMatrix = Math::GetTransform(position, scale, transform.Rotation);
 
@@ -237,7 +235,7 @@ namespace proton {
 		{
 			auto& transform = m_SelectedEntity.GetComponent<TransformComponent>();
 			float padding = glm::sqrt(m_ActiveScene->GetPrimaryCamera().GetZoomLevel()) * 0.05f;
-			glm::vec3 position = { transform.Position.x, transform.Position.y, 0.21f };
+			glm::vec3 position = { transform.WorldPosition.x, transform.WorldPosition.y, 0.21f };
 			glm::vec3 scale = { transform.Scale.x + padding, transform.Scale.y + padding, 1.0f };
 			glm::mat4 transformMatrix = Math::GetTransform(position, scale, transform.Rotation);
 
@@ -252,7 +250,7 @@ namespace proton {
 					scale.x *= (float)pixelSize.x / (float)pixelSize.y;
 			}
 			Renderer::SetLineWidth(glm::min(50.0f * padding, 1.0f));
-			Renderer::DrawRect(transformMatrix, color);
+			Renderer::DrawDashedRect(transformMatrix, color, m_Camera.m_Camera.GetZoomLevel());
 		}
 
 		Renderer::EndScene();

@@ -57,7 +57,7 @@ namespace proton {
 				glDeleteShader(shader);
 
 				PT_CORE_ERROR(infoLog.data());
-				PT_ASSERT(false, "Shader compilation failure!");
+				PT_CORE_ASSERT(false, "Shader compilation failure!");
 				break;
 			}
 
@@ -85,7 +85,7 @@ namespace proton {
 				glDeleteShader(id);
 
 			PT_CORE_ERROR(infoLog.data());
-			PT_ASSERT(false, "Shader link failure!");
+			PT_CORE_ASSERT(false, "Shader link failure!");
 			return;
 		}
 

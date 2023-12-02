@@ -39,15 +39,12 @@ namespace proton {
 
 		// Pause the simulation. Set scene state to SceneState::Pause
 		void Pause(bool pause = true);
-
-		// Stop the simulation, destroy physics world and entity scripts. Set scene state to SceneState::Stop
-		void Stop();
 		
 		// Create entitiy with random unique identifier (UUID)
 		Entity CreateEntity(const std::string& name = "Entity");
 
 		// Create entitiy with given identifier (UUID)
-		Entity CreateEntityWithID(UUID id, const std::string& name = "Entity");
+		Entity CreateEntityWithUUID(UUID id, const std::string& name = "Entity");
 
 		// Destroy given entity
 		void DestroyEntity(Entity entity, bool popHierachy = true);
@@ -60,6 +57,9 @@ namespace proton {
 
 		// Find entity by tag (name) from TagComponent
 		Entity FindByTag(const std::string& tag);
+
+		void SetEntityLocalPosition(Entity entity, const glm::vec3& position);
+		void SetEntityWorldPosition(Entity entity, const glm::vec3& position);
 
 		// Find all entities that have given tag
 		std::vector<Entity> FindAllByTag(const std::string& tag);
@@ -94,6 +94,8 @@ namespace proton {
 		// SceneState::Play, SceneState::Play, SceneState::Stop
 		SceneState GetSceneState() const { return m_SceneState; }
 
+		bool IsPhysicsEnabled() const { return m_EnablePhysics; }
+
 	private:
 		void OnUpdate(float ts);
 		void RenderScene(const Camera& camera);
@@ -102,6 +104,8 @@ namespace proton {
 
 		void CachePrimaryCameraPosition();
 		void CacheCursorWorldPosition();
+
+		void CalculateWorldPositions(bool isPhysicsSimulated);
 
 		uint32_t GetEntitiesCount() const;
 		uint32_t GetScriptedEntitiesCount() const;
@@ -118,6 +122,7 @@ namespace proton {
 		// ECS
 		entt::registry m_Registry;
 		std::unordered_map<UUID, Entity> m_EntityMap;
+		std::vector<Entity> m_Root;
 
 		// Camera
 		entt::entity m_PrimaryCameraEntity = entt::null;
@@ -136,7 +141,7 @@ namespace proton {
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneManager;
-
+		
 		friend class EditorLayer;
 		friend class EditorCamera;
 		friend class MiscellaneousPanel;

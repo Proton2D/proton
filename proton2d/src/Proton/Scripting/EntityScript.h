@@ -33,7 +33,7 @@ namespace proton {
 	public:
 		virtual ~EntityScript() = default;
 
-		virtual void OnCreate() {}
+		virtual bool OnCreate() { return true; }
 		virtual void OnDestroy() {}
 		virtual void OnUpdate(float ts) {}
 
@@ -53,8 +53,9 @@ namespace proton {
 		Entity m_Entity;
 		
 	private:
+		bool m_Stopped = false;
 		bool m_Initialized = false;
-		std::unordered_map<std::string, ScriptField> m_ScriptFields;
+		std::map<std::string, ScriptField> m_ScriptFields;
 
 		friend class Scene;
 		friend class InspectorPanel;

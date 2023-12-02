@@ -48,10 +48,10 @@ namespace proton {
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
-		return CreateEntityWithID(UUID(), name);
+		return CreateEntityWithUUID(UUID(), name);
 	}
 
-	Entity Scene::CreateEntityWithID(UUID id, const std::string& name)
+	Entity Scene::CreateEntityWithUUID(UUID id, const std::string& name)
 	{
 		Entity entity = Entity{ m_Registry.create(), this };
 		entity.AddComponent<IDComponent>().ID = id;
@@ -59,26 +59,20 @@ namespace proton {
 		entity.AddComponent<TransformComponent>();
 		entity.AddComponent<RelationshipComponent>();
 		m_EntityMap[id] = entity;
+		m_Root.push_back(entity);
 		return entity;
 	}
 
 	void Scene::DestroyEntity(Entity entity, bool popHierarchy)
 	{
-		if (!entity.IsValid())
-			return;
+		if (!entity.IsValid()) return;
 
 		if (entity.HasComponent<ScriptComponent>())
-		{
-			auto& scriptComponent = entity.GetComponent<ScriptComponent>();
-			for (auto& kv : scriptComponent.Scripts)
-				kv.second->OnDestroy();
-
 			entity.TerminateScripts();
-		}
 
 		if (entity.HasComponent<RigidbodyComponent>())
 		{
-			if (m_EnablePhysics && m_PhysicsWorld)
+			if (m_EnablePhysics && m_PhysicsWorld->IsInitialized())
 				m_PhysicsWorld->DestroyRuntimeBody(entity.GetUUID());	
 		}
 
@@ -88,10 +82,44 @@ namespace proton {
 			m_PrimaryCamera = nullptr;
 		}
 
-		DestroyChildEntities(entity);
-		if (popHierarchy)
-			entity.PopHierarchy();
+		auto& rc = entity.GetComponent<RelationshipComponent>();
+
+		// Destroy child entities
+		Entity current{ rc.First, this };
+		while (current)
+		{
+			entt::entity next = current.GetComponent<RelationshipComponent>().Next;
+			DestroyEntity(current, false);
+			current = Entity{ next, this };
+		}
+
+		// Update parent hierarchy only for entity which is being deleted
+		if (popHierarchy && rc.Parent != entt::null)
+		{
+			Entity parent{ rc.Parent, this };
+			Entity prev{ rc.Prev, this };
+			Entity next{ rc.Next, this };
+
+			auto& prc = parent.GetComponent<RelationshipComponent>();
+			prc.ChildrenCount--;
+			if (prc.First == entity.m_Handle)
+				prc.First = rc.Next;
+
+			if (prev)
+				prev.GetComponent<RelationshipComponent>().Next = rc.Next;
+		
+			if (next)
+				next.GetComponent<RelationshipComponent>().Prev = rc.Prev;
 			
+		}
+
+		if (rc.Parent == entt::null) 
+		{
+			auto it = std::find(m_Root.begin(), m_Root.end(), entity);
+			if (it != m_Root.end())
+				m_Root.erase(it);
+		}
+
 		m_EntityMap.erase(entity.GetUUID());
 		m_Registry.destroy(entity.m_Handle);
 	}
@@ -110,30 +138,77 @@ namespace proton {
 		m_SceneState = pause ? SceneState::Paused : SceneState::Play;
 	}
 
-	void Scene::Stop()
-	{
-		if (m_SceneState == SceneState::Stop) {
-			PT_CORE_WARN("[Scene::Stop] Scene simulation is already stopped.");
-			return;
-		}
-		
-		m_PhysicsWorld->DestroyWorld();
-
-		m_Registry.view<ScriptComponent>().each([=](auto entity, auto& scriptComponent)
-		{
-			for (auto& [scriptName, scriptInstance] : scriptComponent.Scripts)
-			{
-				if (scriptInstance->m_Initialized)
-					Entity{ entity, this }.RemoveScript(scriptName);
-			}
-		});
-
-		m_SceneState = SceneState::Stop;
-	}
-
 	void Scene::SetScreenClearColor(const glm::vec4& color)
 	{
 		m_ClearColor = color;
+	}
+
+	void Scene::SetEntityLocalPosition(Entity entity, const glm::vec3& position)
+	{
+		auto [transform, rc] = m_Registry.get<TransformComponent, RelationshipComponent>(entity.m_Handle);
+		transform.WorldPosition = position;
+		transform.LocalPosition = position;
+		Entity current{ rc.Parent, this };
+		while (current)
+		{
+			auto& crc = current.GetComponent<RelationshipComponent>();
+			transform.WorldPosition += current.GetTransform().LocalPosition;
+			current = Entity{ crc.Parent, this };
+		}
+	}
+
+	void Scene::SetEntityWorldPosition(Entity entity, const glm::vec3& position)
+	{
+		auto [transform, rc] = m_Registry.get<TransformComponent, RelationshipComponent>(entity.m_Handle);
+		transform.WorldPosition = position;
+		transform.LocalPosition = position;
+		Entity current{ rc.Parent, this };
+		while (current)
+		{
+			auto& crc = current.GetComponent<RelationshipComponent>();
+			transform.LocalPosition -= current.GetTransform().LocalPosition;
+			current = Entity{ crc.Parent, this };
+		}
+	}
+
+	static void CalculateEntityWorldPositon(Scene* scene, Entity entity, const glm::vec3& parentPos, RelationshipComponent& rc, bool isPhysicsSimulated)
+	{
+		auto& transform = entity.GetTransform();
+		if (isPhysicsSimulated && entity.HasComponent<RigidbodyComponent>())
+			scene->SetEntityWorldPosition(entity, transform.WorldPosition);
+		else
+			transform.WorldPosition = parentPos + transform.LocalPosition;
+		if (rc.First != entt::null) 
+		{
+			Entity current{ rc.First, scene };
+			while (current) 
+			{
+				auto& crc = current.GetComponent<RelationshipComponent>();
+				CalculateEntityWorldPositon(scene, current, transform.WorldPosition, crc, isPhysicsSimulated);
+				current = Entity{ crc.Next, scene};
+			}
+		}
+	}
+
+	void Scene::CalculateWorldPositions(bool isPhysicsSimulated)
+	{
+		for (auto& entity : m_Root)
+		{
+			auto& transform = entity.GetTransform();
+			if (isPhysicsSimulated)
+				transform.LocalPosition = transform.WorldPosition;
+			else
+				transform.WorldPosition = transform.LocalPosition;
+
+			auto& rrc = entity.GetComponent<RelationshipComponent>();
+			Entity current{ rrc.First, this };
+			while (current)
+			{
+				auto& rc = current.GetComponent<RelationshipComponent>();
+				CalculateEntityWorldPositon(this, current, transform.WorldPosition, rc, isPhysicsSimulated);
+				current = Entity{ rc.Next, this };
+			}
+		}
 	}
 
 	void Scene::OnUpdate(float ts)
@@ -143,29 +218,44 @@ namespace proton {
 		CachePrimaryCameraPosition();
 		CacheCursorWorldPosition();
 
+		// Calculate world position (no physics simulation)
+		if (m_SceneState != SceneState::Play)
+			CalculateWorldPositions(false);
+
 		if (m_SceneState == SceneState::Play)
 		{
 			// Update physics
-			if (m_EnablePhysics && m_PhysicsWorld)
+			if (m_EnablePhysics && m_PhysicsWorld->IsInitialized())
 			{
 				PROFILE_SCOPE("update_physics");
 				m_PhysicsWorld->Update(ts);
+
+				// Calculate World Position (physics simulation)
+				CalculateWorldPositions(true);
 			}
 			// Update scripts
 			{
 				PROFILE_SCOPE("update_scripts");
-				m_Registry.view<ScriptComponent>().each([=](auto entity, auto& component)
+				m_Registry.view<ScriptComponent>().each([=](auto e, auto& component)
 				{
-					for (auto& [scriptName, scriptInstance] : component.Scripts)
+					Entity entity{ e, this };
+
+					for (auto& [scriptClassName, scriptInstance] : component.Scripts)
 					{
 						if (!scriptInstance->m_Initialized)
 						{
 							// Create script instance
-							scriptInstance->m_Entity = Entity{ entity, this };
-							scriptInstance->OnCreate();
+							scriptInstance->m_Entity = entity;
 							scriptInstance->m_Initialized = true;
+
+							if (!scriptInstance->OnCreate()) 
+							{
+								scriptInstance->m_Stopped = true;
+								continue;
+							}
 						}
-						scriptInstance->OnUpdate(ts);
+						if(!scriptInstance->m_Stopped)
+							scriptInstance->OnUpdate(ts);
 					}
 				});
 			}
@@ -228,7 +318,7 @@ namespace proton {
 				transform.Scale.y * (sprite.Sprite.m_MirrorFlipY ? -1.0f : 1.0f), 1.0f
 			};
 
-			glm::mat4 transformMatrix = Math::GetTransform(transform.Position, scale, transform.Rotation);
+			glm::mat4 transformMatrix = Math::GetTransform(transform.WorldPosition, scale, transform.Rotation);
 
 			if (sprite.Sprite)
 				Renderer::DrawQuad(transformMatrix, sprite.Sprite, sprite.Color, sprite.TilingFactor);
@@ -249,7 +339,7 @@ namespace proton {
 			if (!spritesheet)
 				continue;
 
-			glm::mat4 transformMatrix = Math::GetTransform(transform.Position, glm::vec2{1.0f}, transform.Rotation);
+			glm::mat4 transformMatrix = Math::GetTransform(transform.WorldPosition, glm::vec2{1.0f}, transform.Rotation);
 			
 			for (const auto& column : sprite.m_Tilemap)
 				for (const auto& tile : column)
@@ -289,24 +379,22 @@ namespace proton {
 	void Scene::CachePrimaryCameraPosition()
 	{
 	#ifdef PT_EDITOR
-		if (m_SceneState != SceneState::Stop && !EditorLayer::GetCamera().m_UseInRuntime)
+		if (m_SceneState == SceneState::Stop || EditorLayer::GetCamera().m_UseInRuntime)
 		{
-	#endif
-			if (m_PrimaryCameraEntity == entt::null) 
-			{
-				m_PrimaryCameraPosition = glm::vec3{ 0.0f };
-				return;
-			}
-			auto [transform, camera] = m_Registry.get<TransformComponent, CameraComponent>(m_PrimaryCameraEntity);
-			m_PrimaryCameraPosition = glm::vec3 {
-				transform.Position.x + camera.PositionOffset.x,
-				transform.Position.y + camera.PositionOffset.y, 0
-			};
-	#ifdef PT_EDITOR
+			m_PrimaryCameraPosition = EditorLayer::GetCamera().GetPosition();
 			return;
 		}
-		m_PrimaryCameraPosition = EditorLayer::GetCamera().GetPosition();
 	#endif
+		if (m_PrimaryCameraEntity == entt::null) 
+		{
+			m_PrimaryCameraPosition = glm::vec3{ 0.0f };
+			return;
+		}
+		auto [transform, camera] = m_Registry.get<TransformComponent, CameraComponent>(m_PrimaryCameraEntity);
+		m_PrimaryCameraPosition = glm::vec3 {
+			transform.WorldPosition.x + camera.PositionOffset.x,
+			transform.WorldPosition.y + camera.PositionOffset.y, 0
+		};
 	}
 
 	void Scene::CacheCursorWorldPosition()
@@ -314,31 +402,29 @@ namespace proton {
 #ifdef PT_EDITOR
 		uint32_t width = (uint32_t)EditorLayer::Get()->m_SceneViewportPanel.m_ViewportSize.x;
 		uint32_t height = (uint32_t)EditorLayer::Get()->m_SceneViewportPanel.m_ViewportSize.y;
+		const glm::vec2& mouse = EditorLayer::Get()->m_SceneViewportPanel.m_MousePos;
 #else
 		Window& window = Application::Get().GetWindow();
-		uint32_t width = window.GetWidth(), height = window.GetHeight();
+		uint32_t width = window.GetWidth();
+		uint32_t height = window.GetHeight();
+		glm::vec2 mouse = Input::GetMousePosition();
 #endif
 		OrthoProjection ortho = GetPrimaryCamera().GetOrthoProjection();
 		auto& camera = GetPrimaryCameraPosition();
-#ifdef PT_EDITOR
-		const glm::vec2& mouse = EditorLayer::Get()->m_SceneViewportPanel.m_MousePos;
-#else
-		glm::vec2 mouse = Input::GetMousePosition();
-#endif
 		m_CursorWorldPosition[0] = mouse.x / (float)width * ortho.Right * 2.0f + camera.x + ortho.Left;
 		m_CursorWorldPosition[1] = mouse.y / (float)height * ortho.Bottom * 2.0f + camera.y + ortho.Top;
 	}
 
 	b2Body* Scene::GetRuntimeBody(UUID id)
 	{
-		PT_ASSERT(m_EnablePhysics && m_PhysicsWorld, "Physics world is not initialized");
+		PT_CORE_ASSERT(m_EnablePhysics && m_PhysicsWorld->IsInitialized(), "Physics world is not initialized");
 		return m_PhysicsWorld->GetRuntimeBody(id);
 	}
 
 	// TODO: Remove
 	b2Body* Scene::CreateRuntimeBody(Entity entity)
 	{
-		if (!m_EnablePhysics || !m_PhysicsWorld) return nullptr;
+		if (!m_EnablePhysics || !m_PhysicsWorld->IsInitialized()) return nullptr;
 		return m_PhysicsWorld->CreateRuntimeBody(entity);
 	}
 
@@ -358,14 +444,10 @@ namespace proton {
 	Camera& Scene::GetPrimaryCamera()
 	{
 	#ifdef PT_EDITOR
-		if (m_SceneState != SceneState::Stop) {
+		if (m_SceneState == SceneState::Stop || EditorLayer::GetCamera().m_UseInRuntime) 
+			return EditorLayer::GetCamera().GetBaseCamera();
 	#endif
-		// TODO: Refactor this and Renderer::RenderScene
 		return m_PrimaryCamera ? *m_PrimaryCamera : m_DefaultCamera;
-	#ifdef PT_EDITOR
-		}
-		return EditorLayer::GetCamera().GetBaseCamera();
-	#endif
 	}
 
 	Entity Scene::GetPrimaryCameraEntity()
@@ -389,7 +471,7 @@ namespace proton {
 		glm::vec2 point = GetCursorWorldPosition();
 		if (transform.Rotation)
 		{
-			glm::vec2 rotationCenter = { transform.Position.x, transform.Position.y };
+			glm::vec2 rotationCenter = { transform.WorldPosition.x, transform.WorldPosition.y };
 			point -= rotationCenter;
 			point = {
 				point.x * cosinus - point.y * sinus + rotationCenter.x,
@@ -398,7 +480,7 @@ namespace proton {
 		}
 
 		// Check if point is inside entity bounding box
-		const glm::vec3& position = transform.Position;
+		const glm::vec3& position = transform.WorldPosition;
 		const glm::vec2& scale = transform.Scale;
 		return point.x >= position.x - scale.x / 2.0f && point.x <= position.x + scale.x / 2.0f
 			&& point.y >= position.y - scale.y / 2.0f && point.y <= position.y + scale.y / 2.0f;
@@ -422,7 +504,7 @@ namespace proton {
 			glm::vec2 point = mousePos;
 			if (transform.Rotation)
 			{
-				glm::vec2 rotationCenter = { transform.Position.x, transform.Position.y };
+				glm::vec2 rotationCenter = { transform.WorldPosition.x, transform.WorldPosition.y };
 				point -= rotationCenter;
 				point = {
 					point.x * cosinus - point.y * sinus + rotationCenter.x,
@@ -431,7 +513,7 @@ namespace proton {
 			}
 
 			// Check if point is inside entity bounding box
-			const glm::vec3& position = transform.Position;
+			const glm::vec3& position = transform.WorldPosition;
 			const glm::vec2& scale = transform.Scale;
 			if (point.x >= position.x - scale.x / 2.0f && point.x <= position.x + scale.x / 2.0f
 				&& point.y >= position.y - scale.y / 2.0f && point.y <= position.y + scale.y / 2.0f)

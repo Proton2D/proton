@@ -9,7 +9,7 @@ void PortalScript::OnRegisterFields()
 	RegisterField(ScriptFieldType::Int, "Target Level", &m_TargetLevel);
 }
 
-void PortalScript::OnCreate()
+bool PortalScript::OnCreate()
 {
 	m_SpriteAnimation = m_Entity.AddComponent<SpriteAnimationComponent>().SpriteAnimation;
 	m_SpriteAnimation->AddAnimation(0, 8);
@@ -23,7 +23,8 @@ void PortalScript::OnCreate()
 			std::string level = "level_" + std::to_string(m_TargetLevel);
 			if (!SceneManager::IsLoaded(level))
 				SceneManager::Load(level);
-			SceneManager::SetActiveScene(level)->BeginPlay();
+			SceneManager::SetActiveScene(level);
 		}
 	};
+	return true;
 }

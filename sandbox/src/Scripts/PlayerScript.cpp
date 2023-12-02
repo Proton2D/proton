@@ -10,8 +10,14 @@ void PlayerScript::OnRegisterFields()
 	RegisterField(ScriptFieldType::Float, "JumpForce", &m_JumpForce);
 }
 
-void PlayerScript::OnCreate()
+bool PlayerScript::OnCreate()
 {
+	if (!GetScene()->IsPhysicsEnabled())
+	{
+		PT_ERROR("[PlayerScript::OnCreate]: Physics is not enabled!");
+		return false;
+	}
+
 	m_Body = m_Entity.GetRuntimeBody();
 	// Create animations
 	m_Animation = m_Entity.AddComponent<SpriteAnimationComponent>().SpriteAnimation;
@@ -44,6 +50,7 @@ void PlayerScript::OnCreate()
 		// TODO: Create in OnCreate, remove from the Player prefab
 		PT_ERROR("Player has no FootSensor");
 	}
+	return true;
 }
 
 void PlayerScript::OnUpdate(float ts)
@@ -138,6 +145,12 @@ void PlayerScript::OnUpdate(float ts)
 	{
 		m_Animation->SetAnimation(Jump, m_Direction);
 		m_IsJumping = true;
+
+		float velocity = m_Body->GetLinearVelocity().y;
+		if (velocity < 0.05f && velocity > 0.0f)
+			m_Body->ApplyLinearImpulseToCenter({ 0.0f,  -m_JumpForce/ 8.0f }, true);
+		else if (velocity > m_JumpForce/ 5.0f)
+			m_Body->ApplyLinearImpulseToCenter({ 0.0f,  -m_JumpForce/ 6.0f }, true);
 	}
 
 	m_JumpDelay = glm::max(m_JumpDelay - ts, 0.0f);

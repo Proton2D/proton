@@ -6,7 +6,7 @@ public:
 	ENTITY_SCRIPT_CLASS(ParallaxBackground)
 
 	virtual void OnRegisterFields() override;
-	virtual void OnCreate() override;
+	virtual bool OnCreate() override;
 	virtual void OnUpdate(float ts) override;
 private:
 	float m_ParallaxFactor = 1.0f;

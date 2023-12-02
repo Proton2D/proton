@@ -17,7 +17,7 @@ public:
 	ENTITY_SCRIPT_CLASS(PlayerScript)
 
 	virtual void OnRegisterFields() override;
-	virtual void OnCreate() override;
+	virtual bool OnCreate() override;
 	virtual void OnUpdate(float ts) override;
 
 private:
