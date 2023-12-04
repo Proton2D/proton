@@ -1,0 +1,49 @@
+{
+    "UUID": 18236344507459836697,
+    "Tag": "Wooden Box",
+    "Transform": {
+        "Position": [
+            31.34025,
+            2.10712,
+            0.0
+        ],
+        "Rotation": 0.0,
+        "Scale": [
+            1.5,
+            1.5
+        ]
+    },
+    "Sprite": {
+        "Texture": "box.png",
+        "FilterMode": 1,
+        "Flip": [
+            false,
+            false
+        ],
+        "Color": [
+            0.92641,
+            0.89214,
+            0.54943,
+            1.0
+        ]
+    },
+    "Rigidbody": {
+        "Type": 2,
+        "FixedRotation": false
+    },
+    "BoxCollider": {
+        "Size": [
+            1.0,
+            1.0
+        ],
+        "Offset": [
+            0.0,
+            0.0
+        ],
+        "Friction": 0.800000011920929,
+        "Restitution": 0.0,
+        "RestitutionThreshold": 0.5,
+        "Density": 3.0,
+        "IsSensor": false
+    }
+}

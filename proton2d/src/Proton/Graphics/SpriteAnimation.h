@@ -8,7 +8,7 @@ namespace proton {
 
 	enum class AnimationPlayMode
 	{
-		REPEAT = 0, PLAY_ONCE
+		REPEAT, PLAY_ONCE, PAUSED
 	};
 
 	class SpriteAnimation
@@ -22,8 +22,9 @@ namespace proton {
 		// index - spritesheet Y tile pos (from image bottom)
 		void StartAnimation(uint16_t index, bool mirror_x = false, bool mirror_y = false);
 		void SetAnimation(uint16_t index, bool mirror_x = false, bool mirror_y = false);
+		void SetAnimationFrame(uint16_t frame);
 		void SetMirrorFlip(bool mirror_x = false, bool mirror_y = false);
-		void SetPlayMode(AnimationPlayMode mode);
+		void SetPlayMode(AnimationPlayMode mode, bool restartAnimation = true, uint16_t startFrame = 0);
 		void Replay();
 
 		float GetProgress();

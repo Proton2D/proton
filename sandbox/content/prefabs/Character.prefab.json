@@ -1,10 +1,10 @@
 {
     "UUID": 15452605691319723735,
-    "Tag": "Player",
+    "Tag": "Character",
     "Transform": {
         "Position": [
-            3.49944,
-            -0.74993,
+            -0.26926,
+            -0.31975,
             0.1
         ],
         "Rotation": 0.0,
@@ -63,7 +63,7 @@
     },
     "Scripts": [
         {
-            "ClassName": "Player",
+            "ClassName": "Character",
             "Fields": [
                 {
                     "FieldName": "JumpForce",
@@ -71,7 +71,7 @@
                 },
                 {
                     "FieldName": "PlayerSpeed",
-                    "Value": 6.0
+                    "Value": 5.0
                 }
             ]
         }

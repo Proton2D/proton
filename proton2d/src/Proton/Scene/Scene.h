@@ -64,7 +64,13 @@ namespace proton {
 		// Find all entities that have given tag
 		std::vector<Entity> FindAllByTag(const std::string& tag);
 
-		// TODO: Add GetEntitiesWithComponents function
+		// Get entities with given set of components
+		template<typename... Components>
+		auto GetAllEntitiesWith()
+		{
+			return m_Registry.view<Components...>();
+		}
+
 		// TODO: Add DuplicateEntity function
 
 		// Camera related methods
@@ -81,9 +87,6 @@ namespace proton {
 		// Get by UUID the Box2D body from physics world during game runtime. 
 		// Entity must have RigidbodyComponent.
 		b2Body* GetRuntimeBody(UUID id);
-
-		// TODO: remove - add entity queue in PhysicsWorld
-		b2Body* CreateRuntimeBody(Entity entity);
 
 		// Set renderer screen clear color
 		void SetScreenClearColor(const glm::vec4& color);
@@ -141,6 +144,7 @@ namespace proton {
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneManager;
+		friend class PhysicsWorld;
 		
 		friend class EditorLayer;
 		friend class EditorCamera;
@@ -150,8 +154,6 @@ namespace proton {
 		friend class ScenePanel;
 		friend class EditorMenuBar;
 		friend class SceneViewportPanel;
-
-		friend class PhysicsWorld;
 	};
 
 }

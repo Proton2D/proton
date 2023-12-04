@@ -96,6 +96,6 @@ namespace proton {
 
 	struct SpriteAnimationComponent
 	{
-		Shared<SpriteAnimation> SpriteAnimation;
+		SpriteAnimation SpriteAnimation;
 	};
 }

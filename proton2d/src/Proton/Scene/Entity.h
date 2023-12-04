@@ -29,29 +29,36 @@ namespace proton {
 			return m_Scene->m_Registry.emplace<T>(m_Handle, std::forward<Types>(args)...);
 		}
 
-		// ResizableSpriteComponent override of AddComponent
-		template<>
-		ResizableSpriteComponent& AddComponent() const
+		template <typename T>
+		bool HasComponent() const
 		{
-			PT_CORE_ASSERT(!HasComponent<ResizableSpriteComponent>(), "Entity already has component!");
-			PT_CORE_ASSERT(HasComponent<TransformComponent>(), "Entity does not have TransformComponent!");
-			auto& sprite = m_Scene->m_Registry.emplace<ResizableSpriteComponent>(m_Handle);
-			sprite.ResizableSprite.m_Transform = &GetComponent<TransformComponent>();
-			return sprite;
+			return m_Scene->m_Registry.any_of<T>(m_Handle);
 		}
 
-		// SpriteAnimationComponent override of AddComponent
-		template<>
-		SpriteAnimationComponent& AddComponent() const
+		template <typename... TComponents>
+		bool HasComponents() const
 		{
-			PT_CORE_ASSERT(!HasComponent<SpriteAnimationComponent>(), "Entity already has component!");
-			PT_CORE_ASSERT(HasComponent<SpriteComponent>(), "Entity must have SpriteComponent!");
-			auto& sprite = GetComponent<SpriteComponent>().Sprite;
-			PT_CORE_ASSERT(sprite.m_Spritesheet, "Entity must have Spritesheet Texture!");
+			return m_Scene->m_Registry.all_of<TComponents...>(m_Handle);
+		}
 
-			auto& fb = m_Scene->m_Registry.emplace<SpriteAnimationComponent>(m_Handle);
-			fb.SpriteAnimation = MakeShared<SpriteAnimation>(&sprite);
-			return fb;
+		// Remove component from Entity
+		template <typename T>
+		void RemoveComponent()
+		{
+			PT_CORE_ASSERT(HasComponent<T>(), "Entity does not have a component!");
+
+			if (std::is_base_of<ScriptComponent, T>::value)
+				TerminateScripts();
+
+			if (std::is_base_of<CameraComponent, T>::value
+				&& m_Scene->m_PrimaryCameraEntity == *this)
+			{
+				PT_CORE_WARN("[Entity::RemoveComponent<CameraComponent>] Scene Primary Camera has been removed!");
+				m_Scene->m_PrimaryCameraEntity = entt::null;
+				m_Scene->m_PrimaryCamera = nullptr;
+			}
+
+			m_Scene->m_Registry.remove<T>(m_Handle);
 		}
 
 		// Add script to Entity and return instance
@@ -71,48 +78,33 @@ namespace proton {
 			return scriptInstance;
 		}
 
+		// Definitions in EntityComponent.h
+
+		// AddComponent<ResizableSpriteComponent>
+		template<> ResizableSpriteComponent& AddComponent() const;
+
+		// AddComponent<RigidbodyComponent>
+		template<> RigidbodyComponent& AddComponent() const;
+
+		// AddComponent<BoxColliderComponent>
+		template<> BoxColliderComponent& AddComponent() const;
+
+		// AddComponent<SpriteAnimationComponent>
+		template<> SpriteAnimationComponent& AddComponent() const;
+
+
 		// Remove script from Entity
 		void RemoveScript(const std::string& scriptClassName);
-
-		// Remove component from Entity
-		template <typename T>
-		void RemoveComponent()
-		{
-			PT_CORE_ASSERT(HasComponent<T>(), "Entity does not have a component!");
-			
-			if (std::is_base_of<ScriptComponent, T>::value)
-				TerminateScripts();
-
-			if (std::is_base_of<CameraComponent, T>::value
-				&& m_Scene->m_PrimaryCameraEntity == *this)
-			{
-				PT_CORE_WARN("[Entity::RemoveComponent<CameraComponent>] Entity with Scene Primary Camera has been removed!");
-				m_Scene->m_PrimaryCameraEntity = entt::null;
-				m_Scene->m_PrimaryCamera = nullptr;
-			}
-
-			m_Scene->m_Registry.remove<T>(m_Handle);
-		}
-
-		// Check if Entity has given component
-		template <typename T>
-		bool HasComponent() const
-		{
-			return m_Scene->m_Registry.any_of<T>(m_Handle);
-		}
-
-		// Check if Entity has given set of components
-		template <typename... TComponents>
-		bool HasComponents() const
-		{
-			return m_Scene->m_Registry.all_of<TComponents...>(m_Handle);
-		}
 
 		// Get TransformComponent
 		TransformComponent& GetTransform();
 
+		// Set position relative to world center
+		// Updates World and Local position
 		void SetWorldPosition(const glm::vec3& position);
 		
+		// Set position relative to parent entity position
+		// Updates World and Local position
 		void SetLocalPosition(const glm::vec3& position);
 
 		// Get pointer to scene

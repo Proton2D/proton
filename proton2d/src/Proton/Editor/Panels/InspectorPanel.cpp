@@ -6,7 +6,7 @@
 #include "Proton/Utils/Utils.h"
 #include "Proton/Assets/AssetManager.h"
 #include "Proton/Scripting/ScriptFactory.h"
-#include "Proton/Scene/Components.h"
+#include "Proton/Scene/EntityComponent.h"
 #include "Proton/Scripting/EntityScript.h"
 #include "Proton/Scene/PrefabManager.h"
 #include "Proton/Physics/PhysicsWorld.h"
@@ -535,7 +535,7 @@ namespace proton {
 
 				if (removeScript)
 				{
-					bool breakLoop = scriptInstance->m_ScriptFields.size() == 1;
+					bool breakLoop = component.Scripts.size() == 1;
 					m_SelectedEntity.RemoveScript(scriptClassName);
 					if (breakLoop)
 						break;

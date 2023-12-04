@@ -1,6 +1,7 @@
 #include "ptpch.h"
 #include "Proton/Scene/Entity.h"
 #include "Proton/Scripting/EntityScript.h"
+#include "Proton/Physics/PhysicsWorld.h"
 
 #include <box2d/b2_body.h>
 

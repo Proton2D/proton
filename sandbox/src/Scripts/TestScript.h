@@ -10,10 +10,12 @@ public:
 	virtual bool OnCreate() override
 	{
 		m_Body = m_Entity.GetRuntimeBody();
-		auto& bc = m_Entity.GetComponent<BoxColliderComponent>();
 
+		// Set collision callback function (lambda)
+		auto& bc = m_Entity.GetComponent<BoxColliderComponent>();
 		bc.ContactCallback.OnBeginContactFunction = [&](PhysicsContact contact)
 		{
+			// Change color to the color of entity that collided with
 			auto& sprite = contact.Other->GetComponent<SpriteComponent>();
 			if (sprite.Color != glm::vec4{ 1.0f })
 				m_Entity.GetComponent<SpriteComponent>().Color = sprite.Color;
@@ -23,6 +25,7 @@ public:
 
 	virtual void OnUpdate(float ts) override
 	{
+		// Apply random impules in random intervals (1-3s)
 		if (m_Timer == 0.0f)
 		{
 			m_Timer = Random::Float(1.0f, 3.0f);

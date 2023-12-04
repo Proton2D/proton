@@ -11,7 +11,11 @@ namespace proton {
 
 	EntityScript* ScriptFactory::AddScriptToEntity(Entity entity, const std::string& className)
 	{
-		PT_CORE_ASSERT(m_ScriptRegistry.find(className) != m_ScriptRegistry.end(), "Script add function not found in registry");
+		if (m_ScriptRegistry.find(className) == m_ScriptRegistry.end())
+		{
+			PT_CORE_ERROR("[ScriptFactory::AddScriptToEntity] Script '{}' not found!", className);
+			return nullptr;
+		}
 		AddScriptFunction& addScriptFunction = m_ScriptRegistry.at(className);
 		EntityScript* script = addScriptFunction(entity);
 		return script;

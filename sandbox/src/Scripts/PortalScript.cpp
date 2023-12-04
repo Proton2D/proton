@@ -11,7 +11,7 @@ void PortalScript::OnRegisterFields()
 
 bool PortalScript::OnCreate()
 {
-	m_SpriteAnimation = m_Entity.AddComponent<SpriteAnimationComponent>().SpriteAnimation;
+	m_SpriteAnimation = &m_Entity.AddComponent<SpriteAnimationComponent>().SpriteAnimation;
 	m_SpriteAnimation->AddAnimation(0, 8);
 	m_SpriteAnimation->SetAnimation(0);
 	m_SpriteAnimation->SetFPS(10);
@@ -21,8 +21,7 @@ bool PortalScript::OnCreate()
 		if (contact.Other->GetTag() == "Player")
 		{
 			std::string level = "level_" + std::to_string(m_TargetLevel);
-			if (!SceneManager::IsLoaded(level))
-				SceneManager::Load(level);
+			SceneManager::Load(level, true);
 			SceneManager::SetActiveScene(level);
 		}
 	};

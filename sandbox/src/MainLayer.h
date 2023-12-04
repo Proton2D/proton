@@ -8,5 +8,5 @@ public:
 	virtual void OnEvent(proton::Event& e);
 
 private:
-	proton::Entity SpawnRandomBox(const glm::vec2& position);
+	void SpawnRandomBox(const glm::vec2& position);
 };

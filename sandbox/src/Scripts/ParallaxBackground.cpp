@@ -44,15 +44,13 @@ void ParallaxBackground::OnUpdate(float ts)
 	
 	auto& transform = m_Entity.GetTransform();
 	transform.Scale = scale;
-	transform.WorldPosition.x = position - offset;
-	transform.WorldPosition.y = cameraPos.y;
+	m_Entity.SetWorldPosition({ position - offset, cameraPos.y, transform.WorldPosition.z });
 
 	for (Entity copy : m_Copies)
 	{
 		auto& transform = copy.GetTransform();
 		position += scale.x;
 		transform.Scale = scale;
-		transform.WorldPosition.x = position - offset;
-		transform.WorldPosition.y = cameraPos.y;
+		copy.SetWorldPosition({ position - offset, cameraPos.y, transform.WorldPosition.z });
 	}
 }

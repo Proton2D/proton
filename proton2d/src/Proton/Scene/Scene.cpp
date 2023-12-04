@@ -262,7 +262,7 @@ namespace proton {
 			// Update animations
 			auto view = m_Registry.view<SpriteAnimationComponent>();
 			for (auto entity : view)
-				view.get<SpriteAnimationComponent>(entity).SpriteAnimation->Update(ts);
+				view.get<SpriteAnimationComponent>(entity).SpriteAnimation.Update(ts);
 		}
 
 		// Render scene
@@ -419,13 +419,6 @@ namespace proton {
 	{
 		PT_CORE_ASSERT(m_EnablePhysics && m_PhysicsWorld->IsInitialized(), "Physics world is not initialized");
 		return m_PhysicsWorld->GetRuntimeBody(id);
-	}
-
-	// TODO: Remove
-	b2Body* Scene::CreateRuntimeBody(Entity entity)
-	{
-		if (!m_EnablePhysics || !m_PhysicsWorld->IsInitialized()) return nullptr;
-		return m_PhysicsWorld->CreateRuntimeBody(entity);
 	}
 
 	void Scene::SetPrimaryCameraEntity(Entity entity)

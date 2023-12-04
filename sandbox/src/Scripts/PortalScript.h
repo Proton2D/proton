@@ -8,6 +8,6 @@ public:
 	virtual bool OnCreate() override;
 	virtual void OnRegisterFields() override;
 private:
-	Shared<SpriteAnimation> m_SpriteAnimation;
+	SpriteAnimation* m_SpriteAnimation;
 	int m_TargetLevel = 1;
 };

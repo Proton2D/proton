@@ -1,12 +1,12 @@
 #include "ptpch.h"
 #include "Proton/Assets/SceneSerializer.h"
+#include "Proton/Scene/EntityComponent.h"
+#include "Proton/Scene/Scene.h"
 #include "Proton/Assets/AssetManager.h"
 #include "Proton/Scripting/EntityScript.h"
 #include "Proton/Scripting/ScriptFactory.h"
-#include "Proton/Scene/Scene.h"
-#include "Proton/Scene/Entity.h"
-#include "Proton/Utils/Utils.h"
 #include "Proton/Physics/PhysicsWorld.h"
+#include "Proton/Utils/Utils.h"
 
 #include <fstream>
 
@@ -320,19 +320,30 @@ namespace proton {
 			
 			if (sprite.contains("Texture"))
 			{
-				if (sprite.contains("TilePos"))
+				const auto& texture = AssetManager::GetTexture(sprite["Texture"]);
+				if (texture)
 				{
-					spriteComponent.Sprite.SetSpritesheet(AssetManager::GetSpritesheet(sprite["Texture"]));
+					if (sprite.contains("TilePos"))
+					{
+						const auto& spritesheet = AssetManager::GetSpritesheet(sprite["Texture"]);
+						if (spritesheet)
+						{
+							spriteComponent.Sprite.SetSpritesheet(spritesheet);
+							spriteComponent.Sprite.SetTile(sprite["TilePos"][0], sprite["TilePos"][1]);
+							spriteComponent.Sprite.SetTileSize(sprite["TileSize"][0], sprite["TileSize"][1]);
+						}
+						else
+							PT_CORE_ERROR("[SceneSerializer::DeserializeEntity] Spritesheet {} does not exist!", sprite["Texture"]);
+					}
+					else
+						spriteComponent.Sprite.SetTexture(texture);
 
-					spriteComponent.Sprite.SetTile(sprite["TilePos"][0], sprite["TilePos"][1]);
-					spriteComponent.Sprite.SetTileSize(sprite["TileSize"][0], sprite["TileSize"][1]);
-				} 
+					spriteComponent.Sprite.GetTexture()->m_FilterMode = sprite["FilterMode"];
+					spriteComponent.Sprite.m_MirrorFlipX = sprite["Flip"][0];
+					spriteComponent.Sprite.m_MirrorFlipX = sprite["Flip"][1];
+				}
 				else
-					spriteComponent.Sprite.SetTexture(AssetManager::GetTexture(sprite["Texture"]));
-
-				spriteComponent.Sprite.GetTexture()->m_FilterMode = sprite["FilterMode"];
-				spriteComponent.Sprite.m_MirrorFlipX = sprite["Flip"][0];
-				spriteComponent.Sprite.m_MirrorFlipX = sprite["Flip"][1];
+					PT_CORE_ERROR("[SceneSerializer::DeserializeEntity] Texture '{}' does not exist!", sprite["Texture"]);
 			}
 			
 			json& color = jsonObj["Sprite"]["Color"];
@@ -399,6 +410,9 @@ namespace proton {
 			{
 				std::string scriptClassName = scriptJson["ClassName"];
 				EntityScript* script = ScriptFactory::Get().AddScriptToEntity(entity, scriptClassName);
+
+				if (script == nullptr)
+					continue;
 
 				if (scriptJson.contains("Fields"))
 				{
