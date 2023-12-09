@@ -29,21 +29,20 @@ namespace proton {
 	void Scene::BeginPlay()
 	{	
 		if (m_SceneState == SceneState::Play || m_SceneState == SceneState::Paused)
-			return;
-
-	#ifdef PT_EDITOR
-		// TODO: Refactor: Change to Scene::DuplicateScene
-		// Temporary solution
-		SceneSerializer serializer(this);
-		std::string filepath = m_SceneFilepath == "<Unsaved scene>" ? "unsaved_scene" : m_SceneFilepath;
-		std::replace(filepath.begin(), filepath.end(), '\\', '_');
-		serializer.Serialize("editor/cache/" + filepath + ".scene.json");
-	#endif
+			return; 
 
 		if (m_EnablePhysics)
 			m_PhysicsWorld->BuildWorld();
 
 		m_SceneState = SceneState::Play;
+	}
+
+	void Scene::Pause(bool pause)
+	{
+		if (m_SceneState == SceneState::Stop)
+			return;
+
+		m_SceneState = pause ? SceneState::Paused : SceneState::Play;
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
@@ -110,7 +109,6 @@ namespace proton {
 		
 			if (next)
 				next.GetComponent<RelationshipComponent>().Prev = rc.Prev;
-			
 		}
 
 		if (rc.Parent == entt::null) 
@@ -131,16 +129,6 @@ namespace proton {
 			Entity entity{ e, this };
 			DestroyEntity(entity);
 		});
-	}
-
-	void Scene::Pause(bool pause)
-	{
-		m_SceneState = pause ? SceneState::Paused : SceneState::Play;
-	}
-
-	void Scene::SetScreenClearColor(const glm::vec4& color)
-	{
-		m_ClearColor = color;
 	}
 
 	void Scene::SetEntityLocalPosition(Entity entity, const glm::vec3& position)
@@ -239,14 +227,17 @@ namespace proton {
 				m_Registry.view<ScriptComponent>().each([=](auto e, auto& component)
 				{
 					Entity entity{ e, this };
+					bool hasRigidbodyComponent = entity.HasComponent<RigidbodyComponent>();
 
 					for (auto& [scriptClassName, scriptInstance] : component.Scripts)
 					{
 						if (!scriptInstance->m_Initialized)
 						{
-							// Create script instance
-							scriptInstance->m_Entity = entity;
+							// Initialize EntityScript instance
 							scriptInstance->m_Initialized = true;
+
+							if (hasRigidbodyComponent)
+								scriptInstance->RetrieveRuntimeBody();
 
 							if (!scriptInstance->OnCreate()) 
 							{
@@ -399,26 +390,29 @@ namespace proton {
 
 	void Scene::CacheCursorWorldPosition()
 	{
-#ifdef PT_EDITOR
+	#ifdef PT_EDITOR
 		uint32_t width = (uint32_t)EditorLayer::Get()->m_SceneViewportPanel.m_ViewportSize.x;
 		uint32_t height = (uint32_t)EditorLayer::Get()->m_SceneViewportPanel.m_ViewportSize.y;
 		const glm::vec2& mouse = EditorLayer::Get()->m_SceneViewportPanel.m_MousePos;
-#else
+	#else
 		Window& window = Application::Get().GetWindow();
 		uint32_t width = window.GetWidth();
 		uint32_t height = window.GetHeight();
 		glm::vec2 mouse = Input::GetMousePosition();
-#endif
+	#endif
 		OrthoProjection ortho = GetPrimaryCamera().GetOrthoProjection();
 		auto& camera = GetPrimaryCameraPosition();
 		m_CursorWorldPosition[0] = mouse.x / (float)width * ortho.Right * 2.0f + camera.x + ortho.Left;
 		m_CursorWorldPosition[1] = mouse.y / (float)height * ortho.Bottom * 2.0f + camera.y + ortho.Top;
 	}
 
-	b2Body* Scene::GetRuntimeBody(UUID id)
+	Camera& Scene::GetPrimaryCamera()
 	{
-		PT_CORE_ASSERT(m_EnablePhysics && m_PhysicsWorld->IsInitialized(), "Physics world is not initialized");
-		return m_PhysicsWorld->GetRuntimeBody(id);
+	#ifdef PT_EDITOR
+		if (m_SceneState == SceneState::Stop || EditorLayer::GetCamera().m_UseInRuntime)
+			return EditorLayer::GetCamera().GetBaseCamera();
+	#endif
+		return m_PrimaryCamera ? *m_PrimaryCamera : m_DefaultCamera;
 	}
 
 	void Scene::SetPrimaryCameraEntity(Entity entity)
@@ -432,15 +426,6 @@ namespace proton {
 		auto& camera = entity.GetComponent<CameraComponent>();
 		m_PrimaryCamera = &camera.Camera;
 		m_PrimaryCameraEntity = entity.m_Handle;
-	}
-
-	Camera& Scene::GetPrimaryCamera()
-	{
-	#ifdef PT_EDITOR
-		if (m_SceneState == SceneState::Stop || EditorLayer::GetCamera().m_UseInRuntime) 
-			return EditorLayer::GetCamera().GetBaseCamera();
-	#endif
-		return m_PrimaryCamera ? *m_PrimaryCamera : m_DefaultCamera;
 	}
 
 	Entity Scene::GetPrimaryCameraEntity()
@@ -517,9 +502,20 @@ namespace proton {
 		return entities;
 	}
 
+	b2Body* Scene::GetRuntimeBody(UUID id)
+	{
+		PT_CORE_ASSERT(m_EnablePhysics && m_PhysicsWorld->IsInitialized(), "Physics world is not initialized");
+		return m_PhysicsWorld->GetRuntimeBody(id);
+	}
+
 	const glm::vec3& Scene::GetPrimaryCameraPosition()
 	{
 		return m_PrimaryCameraPosition;
+	}
+
+	void Scene::SetScreenClearColor(const glm::vec4& color)
+	{
+		m_ClearColor = color;
 	}
 
 	uint32_t Scene::GetEntitiesCount() const
@@ -530,6 +526,21 @@ namespace proton {
 	uint32_t Scene::GetScriptedEntitiesCount() const
 	{
 		return (int32_t)m_Registry.view<ScriptComponent>().size();
+	}
+
+	const std::string& Scene::GetFilepath() const
+	{
+		return m_SceneFilepath;
+	}
+
+	SceneState Scene::GetSceneState() const
+	{
+		return m_SceneState;
+	}
+
+	bool Scene::IsPhysicsEnabled() const
+	{
+		return m_EnablePhysics;
 	}
 
 	bool Scene::IsPhysicsWorldInitialized() const

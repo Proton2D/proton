@@ -3,6 +3,7 @@
 #include "Proton/Editor/Panels/ScenePanel.h"
 #include "Proton/Editor/EditorLayer.h"
 #include "Proton/Scene/SceneManager.h"
+#include "Proton/Assets/SceneSerializer.h"
 #include "Proton/Physics/PhysicsWorld.h"
 #include "Proton/Utils/Utils.h"
 
@@ -59,7 +60,15 @@ namespace proton {
 		else
 		{
 			if (ImGui::Button("Play", { 75, 30 }))
+			{
+				// Temporary solution
+				SceneSerializer serializer(m_ActiveScene); 
+				std::string filepath = m_ActiveScene->m_SceneFilepath == "<Unsaved scene>" ? "unsaved_scene" : m_ActiveScene->m_SceneFilepath;
+				std::replace(filepath.begin(), filepath.end(), '\\', '_');
+				serializer.Serialize("editor/cache/" + filepath + ".scene.json");
+
 				m_ActiveScene->BeginPlay();
+			}
 		}
 
 		ImGui::Dummy({ 0, 5 });
