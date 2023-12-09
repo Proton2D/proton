@@ -12,21 +12,21 @@ void ParallaxBackground::OnRegisterFields()
 
 bool ParallaxBackground::OnCreate()
 {
-	m_Scene = m_Entity.GetScene();
+	m_Scene = GetScene();
 	auto& camera = m_Scene->GetPrimaryCamera();
-	auto& sprite = m_Entity.GetComponent<SpriteComponent>().Sprite;
+	auto& sprite = GetComponent<SpriteComponent>().Sprite;
 
 	m_SpriteAspectRatio = sprite.GetAspectRatio();
 	m_CopiesCount = 1 + (uint32_t)ceil(camera.GetAspectRatio() / m_SpriteAspectRatio);
-	m_Entity.DestroyChildEntities();
+	DestroyChildEntities();
 
 	for (uint32_t i = 0; i < m_CopiesCount; i++)
 	{
-		Entity e = m_Scene->CreateEntity(m_Entity.GetTag() + "-" + std::to_string(i));
-		e.AddComponent<SpriteComponent>().Sprite.SetTexture(sprite.GetTexture());
-		e.GetTransform().WorldPosition.z = m_Entity.GetTransform().WorldPosition.z;
-		m_Entity.AddChildEntity(e);
-		m_Copies.push_back(e); 
+		Entity copy = m_Scene->CreateEntity(GetTag() + "-" + std::to_string(i));
+		copy.AddComponent<SpriteComponent>().Sprite.SetTexture(sprite.GetTexture());
+		copy.GetTransform().WorldPosition.z = GetTransform().WorldPosition.z;
+		AddChildEntity(copy);
+		m_Copies.push_back(copy);
 	}
 	return true;
 }
@@ -42,9 +42,9 @@ void ParallaxBackground::OnUpdate(float ts)
 	float offset = fmod(cameraPos.x * zoomLevel * m_ParallaxFactor, scale.x);
 	float position = cameraPos.x - scale.x * m_CopiesCount / 2.0f + m_PositionOffset * zoomLevel;
 	
-	auto& transform = m_Entity.GetTransform();
+	auto& transform = GetTransform();
 	transform.Scale = scale;
-	m_Entity.SetWorldPosition({ position - offset, cameraPos.y, transform.WorldPosition.z });
+	SetWorldPosition({ position - offset, cameraPos.y, transform.WorldPosition.z });
 
 	for (Entity copy : m_Copies)
 	{

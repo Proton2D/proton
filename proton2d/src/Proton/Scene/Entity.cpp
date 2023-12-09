@@ -1,5 +1,6 @@
 #include "ptpch.h"
 #include "Proton/Scene/Entity.h"
+#include "Proton/Scene/EntityComponent.h"
 #include "Proton/Scripting/EntityScript.h"
 #include "Proton/Physics/PhysicsWorld.h"
 
@@ -49,40 +50,56 @@ namespace proton
 		return true;
 	}
 
-	b2Body* Entity::GetRuntimeBody()
+	b2Body* Entity::RetrieveRuntimeBody()
 	{
 		auto& id = GetComponent<IDComponent>();
-		return m_Scene->GetRuntimeBody(id.ID);
+		PT_CORE_ASSERT(HasComponent<RigidbodyComponent>(), "Entity does not have RigidbodyComponent!");
+		b2Body* body = m_Scene->GetRuntimeBody(id.ID);
+		m_RuntimeBody = body;
+		return body;
 	}
 
-	void Entity::SetVelocity(float x_mps, float y_mps)
+	void Entity::SetLinearVelocity(float x_mps, float y_mps)
 	{
-		b2Body* body = GetRuntimeBody();
-		body->SetLinearVelocity({ x_mps, y_mps });
+		PT_CORE_ASSERT(m_RuntimeBody, "RuntimeBody was nullptr. Did you forget to call RetrieveRuntimeBody?");
+		m_RuntimeBody->SetLinearVelocity({ x_mps, y_mps });
 	}
 
-	void Entity::SetVelocityX(float mps)
+	void Entity::SetLinearVelocityX(float mps)
 	{
-		b2Body* body = GetRuntimeBody();
-		body->SetLinearVelocity({ mps, body->GetLinearVelocity().y });
+		PT_CORE_ASSERT(m_RuntimeBody, "RuntimeBody was nullptr. Did you forget to call RetrieveRuntimeBody?");
+		m_RuntimeBody->SetLinearVelocity({ mps, m_RuntimeBody->GetLinearVelocity().y });
 	}
 
-	void Entity::SetVelocityY(float mps)
+	void Entity::SetLinearVelocityY(float mps)
 	{
-		b2Body* body = GetRuntimeBody();
-		body->SetLinearVelocity({ body->GetLinearVelocity().x, mps });
+		PT_CORE_ASSERT(m_RuntimeBody, "RuntimeBody was nullptr. Did you forget to call RetrieveRuntimeBody?");
+		m_RuntimeBody->SetLinearVelocity({ m_RuntimeBody->GetLinearVelocity().x, mps });
 	}
 
-	glm::vec2 Entity::GetVelocity()
+	glm::vec2 Entity::GetLinearVelocity()
 	{
-		b2Vec2 velocity = GetRuntimeBody()->GetLinearVelocity();
+		PT_CORE_ASSERT(m_RuntimeBody, "RuntimeBody was nullptr. Did you forget to call RetrieveRuntimeBody?");
+		b2Vec2 velocity = m_RuntimeBody->GetLinearVelocity();
+		if (glm::abs(velocity.x) < 0.00001f) velocity.x = 0.0f;
+		if (glm::abs(velocity.y) < 0.00001f) velocity.y = 0.0f;
 		return glm::vec2{ velocity.x, velocity.y };
 	}
 
-	void Entity::ApplyImpulse(const glm::vec2& impulse)
+	void Entity::ApplyLinearImpulse(const glm::vec2& impulse, const glm::vec2& point)
 	{
-		b2Body* body = GetRuntimeBody();
-		body->ApplyLinearImpulse({impulse.x, impulse.y }, body->GetWorldCenter(), true);
+		if (point.x == 0.0f && point.y == 0.0f)
+			m_RuntimeBody->ApplyLinearImpulseToCenter({ impulse.x, impulse.y }, true);
+		else
+			m_RuntimeBody->ApplyLinearImpulse({impulse.x, impulse.y }, {point.x, point.y}, true);
+	}
+
+	SpriteAnimation* Entity::CreateSpriteAnimation()
+	{
+		if (!HasComponent<SpriteAnimationComponent>())
+			return &AddComponent<SpriteAnimationComponent>().SpriteAnimation;
+		PT_CORE_WARN("[Entity::CreateSpriteAnimation] Entity '{}' already has SpriteAnimationComponent!", GetTag());
+		return &GetComponent<SpriteAnimationComponent>().SpriteAnimation;
 	}
 
 	void Entity::TerminateScripts()
@@ -198,6 +215,27 @@ namespace proton
 	void Entity::SetLocalPosition(const glm::vec3& position)
 	{
 		m_Scene->SetEntityLocalPosition(*this, position);
+	}
+
+	void Entity::SetRotationCenter(float angle)
+	{
+		if (m_RuntimeBody)
+		{
+			m_RuntimeBody->SetTransform(m_RuntimeBody->GetPosition(), angle * b2_pi);
+			return;
+		}
+		GetTransform().Rotation = angle;
+	}
+
+	void Entity::RotateCenter(float angle)
+	{
+		if (m_RuntimeBody)
+		{
+			m_RuntimeBody->SetTransform(m_RuntimeBody->GetPosition(),
+				m_RuntimeBody->GetAngle() + angle * b2_pi);
+			return;
+		}
+		GetTransform().Rotation += angle;
 	}
 
 }

@@ -27,6 +27,7 @@ namespace proton {
 	};
 
 	// Use Entity::SetWorldPosition to modify world position manually
+	// Rotation is in degrees
 	struct TransformComponent
 	{
 		glm::vec3 WorldPosition { 0.0f, 0.0f, 0.0f };

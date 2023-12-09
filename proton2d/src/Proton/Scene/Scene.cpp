@@ -531,4 +531,9 @@ namespace proton {
 	{
 		return (int32_t)m_Registry.view<ScriptComponent>().size();
 	}
+
+	bool Scene::IsPhysicsWorldInitialized() const
+	{
+		return m_PhysicsWorld->IsInitialized();
+	}
 }

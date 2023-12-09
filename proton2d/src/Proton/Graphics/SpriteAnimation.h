@@ -24,7 +24,7 @@ namespace proton {
 		void SetAnimation(uint16_t index, bool mirror_x = false, bool mirror_y = false);
 		void SetAnimationFrame(uint16_t frame);
 		void SetMirrorFlip(bool mirror_x = false, bool mirror_y = false);
-		void SetPlayMode(AnimationPlayMode mode, bool restartAnimation = true, uint16_t startFrame = 0);
+		void SetPlayMode(AnimationPlayMode mode, uint16_t startFrame = 0, bool restartAnimation = true);
 		void Replay();
 
 		float GetProgress();

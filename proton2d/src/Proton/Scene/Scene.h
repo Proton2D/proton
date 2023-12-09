@@ -99,6 +99,8 @@ namespace proton {
 
 		bool IsPhysicsEnabled() const { return m_EnablePhysics; }
 
+		bool IsPhysicsWorldInitialized() const;
+
 	private:
 		void OnUpdate(float ts);
 		void RenderScene(const Camera& camera);

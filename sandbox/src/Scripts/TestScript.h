@@ -9,16 +9,14 @@ public:
 
 	virtual bool OnCreate() override
 	{
-		m_Body = m_Entity.GetRuntimeBody();
-
 		// Set collision callback function (lambda)
-		auto& bc = m_Entity.GetComponent<BoxColliderComponent>();
-		bc.ContactCallback.OnBeginContactFunction = [&](PhysicsContact contact)
+		auto& bc = GetComponent<BoxColliderComponent>();
+		bc.ContactCallback.OnBegin = [&](PhysicsContact contact)
 		{
 			// Change color to the color of entity that collided with
 			auto& sprite = contact.Other->GetComponent<SpriteComponent>();
 			if (sprite.Color != glm::vec4{ 1.0f })
-				m_Entity.GetComponent<SpriteComponent>().Color = sprite.Color;
+				GetComponent<SpriteComponent>().Color = sprite.Color;
 		};
 		return true;
 	}
@@ -31,13 +29,12 @@ public:
 			m_Timer = Random::Float(1.0f, 3.0f);
 			float ix = Random::Float(-200.0f, 200.0f);
 			float iy = Random::Float(-200.0f, 200.0f);
-			m_Body->ApplyLinearImpulse({ ix, iy }, m_Body->GetWorldCenter(), true);
+			ApplyLinearImpulse({ ix, iy });
 		}
 
 		m_Timer = glm::max(m_Timer - ts, 0.0f);
 	}
 
 private:
-	b2Body* m_Body;
 	float m_Timer = 0.0f;
 };

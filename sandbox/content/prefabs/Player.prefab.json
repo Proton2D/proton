@@ -1,10 +1,10 @@
 {
-    "UUID": 15452605691319723735,
+    "UUID": 14561715589732361200,
     "Tag": "Player",
     "Transform": {
         "Position": [
-            3.49944,
-            -0.74993,
+            2.82086,
+            -0.52962,
             0.1
         ],
         "Rotation": 0.0,
@@ -66,12 +66,45 @@
             "ClassName": "Player",
             "Fields": [
                 {
+                    "FieldName": "GravityModifier",
+                    "Value": -10.0
+                },
+                {
                     "FieldName": "JumpForce",
-                    "Value": 45.0
+                    "Value": 20.0
+                },
+                {
+                    "FieldName": "PlayerAcceleration",
+                    "Value": 40.0
                 },
                 {
                     "FieldName": "PlayerSpeed",
                     "Value": 6.0
+                }
+            ]
+        },
+        {
+            "ClassName": "ColorHueAnimation",
+            "Fields": [
+                {
+                    "FieldName": "Back and Forth",
+                    "Value": false
+                },
+                {
+                    "FieldName": "HueRangeP",
+                    "Value": 0.0
+                },
+                {
+                    "FieldName": "HueRangeQ",
+                    "Value": 1.0
+                },
+                {
+                    "FieldName": "Saturation",
+                    "Value": 0.699999988079071
+                },
+                {
+                    "FieldName": "Speed",
+                    "Value": 0.5
                 }
             ]
         }

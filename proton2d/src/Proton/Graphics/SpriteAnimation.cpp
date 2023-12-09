@@ -53,7 +53,7 @@ namespace proton {
         m_Sprite->MirrorFlip(mirror_x, mirror_y);
     }
 
-    void SpriteAnimation::SetPlayMode(AnimationPlayMode mode, bool restartAnimation, uint16_t startFrame)
+    void SpriteAnimation::SetPlayMode(AnimationPlayMode mode, uint16_t startFrame, bool restartAnimation)
     {
         m_PlayMode = mode;
         if (restartAnimation)

@@ -97,7 +97,7 @@ namespace proton {
 			if (!scene->m_Registry.size() && s_Instance->m_Scenes.size() > 1)
 				Unload("<Unsaved scene>");
 		}
-		if (s_Instance->m_ActiveScene->GetSceneState() == SceneState::Play)
+		if (s_Instance->m_ActiveScene->m_SceneState == SceneState::Play && targetScene->m_SceneState != SceneState::Play)
 			targetScene->BeginPlay();
 
 		s_Instance->m_ActiveScene = targetScene;

@@ -4,6 +4,8 @@ using namespace proton;
 #include "MainLayer.h"
 
 // Header-only scripts must be compiled somewhere
+#include "Scripts/PortalScript.h"
+#include "Scripts/ColorHueAnimation.h"
 #include "Scripts/RotationScript.h" 
 #include "Scripts/TestScript.h"
 
@@ -41,7 +43,6 @@ void MainLayer::SpawnRandomBox(const glm::vec2& position)
 	auto& transform = entity.GetComponent<TransformComponent>();
 	transform.WorldPosition = { position.x, position.y, 0 };
 	transform.Rotation = Random::Float(0.0f, 80.0f);
-	transform.Scale = { 1.0f, 1.0f };
 
 	auto& sprite = entity.AddComponent<SpriteComponent>("box.png");
 	sprite.Color.r = Random::Float(0.0f, 1.0f);

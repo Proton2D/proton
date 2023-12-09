@@ -38,7 +38,7 @@ namespace proton {
 		bool m_MoveEditorCamera = false;
 
 		bool m_ShowSelectionOutline = true;
-		bool m_ShowSelectionCollider = true;
+		bool m_ShowSelectionCollider = false;
 		bool m_ShowAllColliders = false;
 	
 		friend class Scene;

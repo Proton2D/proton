@@ -86,6 +86,86 @@ namespace proton { namespace Utils {
 		return files;
 	}
 
+	namespace Graphics {
+
+		// Range: 0.0f - 1.0f
+		glm::vec4 RGBAtoHSV(const glm::vec4& rgba)
+		{
+			float r = rgba.r, g = rgba.g, b = rgba.b, a = rgba.a;
+
+			float minVal = std::min({ r, g, b });
+			float maxVal = std::max({ r, g, b });
+			float delta = maxVal - minVal;
+
+			float h, s, v;
+			v = maxVal;
+
+			if (delta < 0.00001f) 
+			{
+				s = 0.0f;
+				h = 0.0f;
+			}
+			else if (maxVal > 0.0f) 
+			{
+				s = delta / maxVal;
+
+				if (r >= maxVal)
+					h = (g - b) / delta;
+				else if (g >= maxVal)
+					h = 2.0f + (b - r) / delta;
+				else
+					h = 4.0f + (r - g) / delta;
+
+				h /= 6.0f;
+
+				if (h < 0.0f)
+					h += 1.0f;
+			}
+			else 
+			{
+				s = 0.0f;
+				h = 0.0f;
+			}
+
+			return glm::vec4(h, s, v, a);
+		}
+
+		// Range: 0.0f - 1.0f
+		glm::vec4 HSVtoRGBA(const glm::vec4& hsv)
+		{
+			float h = hsv.x * 360.0f, s = hsv.y, v = hsv.z, a = hsv.w;
+
+			if (s <= 0.0f) 
+			{
+				return glm::vec4(v, v, v, a);
+			}
+			else 
+			{
+				float hh = (h >= 360.0f) ? 0.0f : h / 60.0f;
+				long i = static_cast<long>(hh);
+				float ff = hh - i;
+				float p = v * (1.0f - s);
+				float q = v * (1.0f - (s * ff));
+				float t = v * (1.0f - (s * (1.0f - ff)));
+
+				switch (i) 
+				{
+				case 0:
+					return glm::vec4(v, t, p, a);
+				case 1:
+					return glm::vec4(q, v, p, a);
+				case 2:
+					return glm::vec4(p, v, t, a);
+				case 3:
+					return glm::vec4(p, q, v, a);
+				case 4:
+					return glm::vec4(t, p, v, a);
+				default:
+					return glm::vec4(v, p, q, a);
+				}
+			}
+		}
+	}
 } 
 
 namespace Math {

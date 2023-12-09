@@ -15,24 +15,24 @@ namespace proton {
 
 		virtual ~Entity() = default;
 
-		template <typename T>
-		T& GetComponent() const
+		template <typename TComponent>
+		TComponent& GetComponent() const
 		{
-			PT_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
-			return m_Scene->m_Registry.get<T>(m_Handle);
+			PT_CORE_ASSERT(HasComponent<TComponent>(), "Entity does not have component!");
+			return m_Scene->m_Registry.get<TComponent>(m_Handle);
 		}
 
-		template <typename T, typename... Types>
-		T& AddComponent(Types&& ...args) const
+		template <typename TComponent, typename... TArgs>
+		TComponent& AddComponent(TArgs&& ...args) const
 		{
-			PT_CORE_ASSERT(!HasComponent<T>(), "Entity already have component!");
-			return m_Scene->m_Registry.emplace<T>(m_Handle, std::forward<Types>(args)...);
+			PT_CORE_ASSERT(!HasComponent<TComponent>(), "Entity already have component!");
+			return m_Scene->m_Registry.emplace<TComponent>(m_Handle, std::forward<TArgs>(args)...);
 		}
 
-		template <typename T>
+		template <typename TComponent>
 		bool HasComponent() const
 		{
-			return m_Scene->m_Registry.any_of<T>(m_Handle);
+			return m_Scene->m_Registry.any_of<TComponent>(m_Handle);
 		}
 
 		template <typename... TComponents>
@@ -42,15 +42,15 @@ namespace proton {
 		}
 
 		// Remove component from Entity
-		template <typename T>
+		template <typename TComponent>
 		void RemoveComponent()
 		{
-			PT_CORE_ASSERT(HasComponent<T>(), "Entity does not have a component!");
+			PT_CORE_ASSERT(HasComponent<TComponent>(), "Entity does not have a component!");
 
-			if (std::is_base_of<ScriptComponent, T>::value)
+			if (std::is_base_of<ScriptComponent, TComponent>::value)
 				TerminateScripts();
 
-			if (std::is_base_of<CameraComponent, T>::value
+			if (std::is_base_of<CameraComponent, TComponent>::value
 				&& m_Scene->m_PrimaryCameraEntity == *this)
 			{
 				PT_CORE_WARN("[Entity::RemoveComponent<CameraComponent>] Scene Primary Camera has been removed!");
@@ -58,7 +58,7 @@ namespace proton {
 				m_Scene->m_PrimaryCamera = nullptr;
 			}
 
-			m_Scene->m_Registry.remove<T>(m_Handle);
+			m_Scene->m_Registry.remove<TComponent>(m_Handle);
 		}
 
 		// Add script to Entity and return instance
@@ -69,11 +69,13 @@ namespace proton {
 				AddComponent<ScriptComponent>();
 
 			auto& component = GetComponent<ScriptComponent>();
-			std::string className{ TScriptClass::__ScriptClassName };
+			std::string className = TScriptClass::__ScriptClassName;
 			PT_CORE_ASSERT(component.Scripts.find(className) == component.Scripts.end(), "The script is already attached to an Entity!");
 
 			EntityScript*& scriptInstance = component.Scripts[className];
 			scriptInstance = new TScriptClass();
+			scriptInstance->m_Handle = m_Handle;
+			scriptInstance->m_Scene = m_Scene;
 			scriptInstance->OnRegisterFields();
 			return scriptInstance;
 		}
@@ -107,6 +109,10 @@ namespace proton {
 		// Updates World and Local position
 		void SetLocalPosition(const glm::vec3& position);
 
+		void SetRotationCenter(float angle);
+
+		void RotateCenter(float angle);
+
 		// Get pointer to scene
 		Scene* GetScene() { return m_Scene; }
 
@@ -137,24 +143,26 @@ namespace proton {
 		// ============== Box2D Rigidbody related ==============
 
 		// RigidbodyComponent required
-		b2Body* GetRuntimeBody();
+		b2Body* RetrieveRuntimeBody();
 
 		// RigidbodyComponent required
-		void SetVelocity(float x_mps, float y_mps);
+		void SetLinearVelocity(float x_mps, float y_mps);
 
 		// RigidbodyComponent required
-		void SetVelocityX(float mps);
+		void SetLinearVelocityX(float mps);
 
 		// RigidbodyComponent required
-		void SetVelocityY(float mps);
+		void SetLinearVelocityY(float mps);
 
 		// RigidbodyComponent required
-		glm::vec2 GetVelocity();
+		glm::vec2 GetLinearVelocity();
 
 		// RigidbodyComponent required
-		void ApplyImpulse(const glm::vec2& impulse);
+		void ApplyLinearImpulse(const glm::vec2& impulse, const glm::vec2& point = {0.0f, 0.0f});
 
 		// ======================================================
+
+		SpriteAnimation* CreateSpriteAnimation();
 
 		// Operator overloads
 		operator uint32_t() const { return (uint32_t)m_Handle; }
@@ -167,14 +175,16 @@ namespace proton {
 		void TerminateScripts();
 
 	private:
-		Scene* m_Scene = nullptr;
 		entt::entity m_Handle = entt::null;
+		Scene* m_Scene = nullptr;
+		b2Body* m_RuntimeBody = nullptr;
 
 		friend class Scene;
 		friend class SceneSerializer;
 		friend class EntityScript;
 		friend class PhysicsWorld;
 		friend class PhysicsContactListener;
+		friend struct PhysicsContact;
 
 		friend class InspectorPanel;
 		friend class SceneViewportPanel;

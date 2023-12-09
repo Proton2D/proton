@@ -22,13 +22,14 @@ namespace proton {
 	{
 		ScriptFieldType Type = ScriptFieldType::Float;
 		void* InstanceFieldValue = nullptr;
+		bool ShowInEditor = true;
 	};
 
 	// Base class for entity scripts.
 	// - Use ENTITY_SCRIPT_CLASS in derived classes for registration.
 	// - Implement OnCreate, OnDestroy, OnUpdate for entity behavior.
 	// - Use OnRegisterFields to register fields (variables) for Serialization / Editor view.
-	class EntityScript
+	class EntityScript : public Entity
 	{
 	public:
 		virtual ~EntityScript() = default;
@@ -43,20 +44,24 @@ namespace proton {
 
 		// Use glm::value_ptr for FloatX and IntX field types.
 		// Supported variable types are listed inside ScriptFieldType enum.
-		void RegisterField(ScriptFieldType type, const std::string& name, void* field) {
-			m_ScriptFields[name] = { type, field };
+		void RegisterField(ScriptFieldType type, const std::string& name, void* field, bool showInEditor = true) 
+		{
+			m_ScriptFields[name] = { type, field, showInEditor };
 		}
 
-		Scene* GetScene() { return m_Entity.GetScene(); }
+		// Draw your custom Editor ImGui interface here.
+		// The ImGui elements will be displayed within the script node in the Inspector Panel.
+		// IMPORTANT: Ensure that your ImGui code is enclosed within #ifdef PT_EDITOR preprocessor directives.
+		virtual void OnImGuiRender() {}
 
-	protected:
-		Entity m_Entity;
 		
 	private:
 		bool m_Stopped = false;
 		bool m_Initialized = false;
+
 		std::map<std::string, ScriptField> m_ScriptFields;
 
+		friend class Entity;
 		friend class Scene;
 		friend class InspectorPanel;
 		friend class SceneSerializer;

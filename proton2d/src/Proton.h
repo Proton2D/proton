@@ -24,8 +24,6 @@
 
 #include "Proton/Scripting/EntityScript.h"
 
-#include "Proton/Graphics/SpriteAnimation.h"
-
 #ifdef PT_EDITOR
 #include <imgui/imgui.h>
 #endif

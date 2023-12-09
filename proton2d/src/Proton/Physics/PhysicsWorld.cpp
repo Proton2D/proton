@@ -31,7 +31,7 @@ namespace proton {
 		m_RuntimeBodies.erase(id);
 	}
 
-	void PhysicsWorld::CreateRuntimeBody(Entity entity)
+	b2Body* PhysicsWorld::CreateRuntimeBody(Entity entity)
 	{
 		auto& uuid = entity.GetComponent<IDComponent>().ID;
 		PT_CORE_ASSERT(m_RuntimeBodies.find(uuid) == m_RuntimeBodies.end(), "Physics runtime body already exists!");
@@ -46,11 +46,13 @@ namespace proton {
 
 		b2Body* body = m_World->CreateBody(&bodyDef);
 		body->SetFixedRotation(rb.FixedRotation);
-		AddFixtureRuntimeBody(entity, body);
+		AddFixtureToRuntimeBody(entity, body);
 		m_RuntimeBodies[entity.GetUUID()] = body;
+		
+		return body;
 	}
 
-	void PhysicsWorld::AddFixtureRuntimeBody(Entity entity, b2Body* body)
+	void PhysicsWorld::AddFixtureToRuntimeBody(Entity entity, b2Body* body)
 	{
 		if (!entity.HasComponent<BoxColliderComponent>()) 
 			return;
@@ -101,7 +103,7 @@ namespace proton {
 				if (parent.HasComponent<RigidbodyComponent>())
 				{
 					b2Body* body = GetRuntimeBody(parent.GetUUID());
-					AddFixtureRuntimeBody(entity, body);
+					AddFixtureToRuntimeBody(entity, body);
 				}
 			}
 		}
@@ -138,7 +140,7 @@ namespace proton {
 					if (rc.Parent != entt::null)
 					{
 						Entity parent{ rc.Parent, m_Scene };
-						AddFixtureRuntimeBody(entity, GetRuntimeBody(parent.GetUUID()));
+						AddFixtureToRuntimeBody(entity, GetRuntimeBody(parent.GetUUID()));
 					}
 				}
 			}
@@ -177,22 +179,22 @@ namespace proton {
 
 	void PhysicsContactListener::BeginContact(b2Contact* contact)
 	{
-		CALL_CONTACT_CALLBACK_FUNCTION(OnBeginContactFunction);
+		CALL_CONTACT_CALLBACK_FUNCTION(OnBegin);
 	}
 
 	void PhysicsContactListener::EndContact(b2Contact* contact)
 	{
-		CALL_CONTACT_CALLBACK_FUNCTION(OnEndContactFunction);
+		CALL_CONTACT_CALLBACK_FUNCTION(OnEnd);
 	}
 
 	void PhysicsContactListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 	{
-		CALL_CONTACT_CALLBACK_FUNCTION(OnPreSolveFunction, oldManifold);
+		CALL_CONTACT_CALLBACK_FUNCTION(OnPreSolve, oldManifold);
 	}
 
 	void PhysicsContactListener::PostSolve(b2Contact* contact, const b2ContactImpulse* impulse)
 	{
-		CALL_CONTACT_CALLBACK_FUNCTION(OnPostSolveFunction, impulse);
+		CALL_CONTACT_CALLBACK_FUNCTION(OnPostSolve, impulse);
 	}
 
 }

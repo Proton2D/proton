@@ -7,6 +7,7 @@
 namespace proton { 
 	
 	namespace Utils {
+
 		std::string ReadFile(const std::string& filepath);
 
 		std::vector<std::string> ScanDirectory(const std::string& directory,
@@ -14,6 +15,12 @@ namespace proton {
 
 		std::vector<std::string> ScanDirectoryRecursive(const std::string& directory,
 			std::initializer_list<std::string> extensionsFilter = {}, bool returnExtensions = true);
+	
+		namespace Graphics {
+			glm::vec4 RGBAtoHSV(const glm::vec4& rgba);
+			glm::vec4 HSVtoRGBA(const glm::vec4& hsv);
+		}
+	
 	} 
 
 	namespace FileDialogs {

@@ -28,7 +28,7 @@ namespace proton {
 		virtual ~PhysicsWorld();
 
 		b2Body* GetRuntimeBody(UUID id);
-		void CreateRuntimeBody(Entity entity);
+		b2Body* CreateRuntimeBody(Entity entity);
 		void DestroyRuntimeBody(UUID id);
 
 		bool IsInitialized() { return m_World != nullptr; }
@@ -39,7 +39,7 @@ namespace proton {
 
 		void Update(float ts);
 
-		void AddFixtureRuntimeBody(Entity entity, b2Body* body = nullptr);
+		void AddFixtureToRuntimeBody(Entity entity, b2Body* body = nullptr);
 	
 	private:
 		b2World* m_World = nullptr;

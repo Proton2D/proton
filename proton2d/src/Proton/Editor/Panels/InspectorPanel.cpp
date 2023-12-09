@@ -494,6 +494,9 @@ namespace proton {
 					ImGui::Dummy({ 0.0f, 3.0f });
 					for (auto& [fieldName, fieldData] : scriptInstance->m_ScriptFields)
 					{
+						if (!fieldData.ShowInEditor)
+							continue;
+
 						switch (fieldData.Type)
 						{
 						case ScriptFieldType::Float:
@@ -530,6 +533,7 @@ namespace proton {
 							break;
 						}
 					}
+					scriptInstance->OnImGuiRender();
 					ImGui::TreePop();
 				}
 

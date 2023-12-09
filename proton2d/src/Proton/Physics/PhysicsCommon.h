@@ -7,6 +7,10 @@
 
 namespace proton {
 
+	// Forward declaration
+	class Entity;
+	class EntityScript;
+
 	struct PhysicsMaterial
 	{
 		float Friction = 0.5f;
@@ -19,21 +23,25 @@ namespace proton {
 	{
 		Entity* Other;
 		b2Contact* Contact;
+
+		bool OtherCompare(Entity* entity);
+
+		bool OtherCompare(EntityScript* script);
 	};
 
 	struct PhysicsContactCallback
 	{
 		std::function<void(PhysicsContact contact)> 
-			OnBeginContactFunction = nullptr;
+			OnBegin = nullptr;
 
 		std::function<void(PhysicsContact contact)>
-			OnEndContactFunction = nullptr;
+			OnEnd = nullptr;
 
 		std::function<void(PhysicsContact contact, const b2Manifold* oldManifold)>
-			OnPreSolveFunction = nullptr;
+			OnPreSolve = nullptr;
 
 		std::function<void(PhysicsContact contact, const b2ContactImpulse* impulse)>
-			OnPostSolveFunction = nullptr;
+			OnPostSolve = nullptr;
 	};
 
 }
