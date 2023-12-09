@@ -333,7 +333,7 @@ namespace proton {
 							spriteComponent.Sprite.SetTileSize(sprite["TileSize"][0], sprite["TileSize"][1]);
 						}
 						else
-							PT_CORE_ERROR("[SceneSerializer::DeserializeEntity] Spritesheet {} does not exist!", sprite["Texture"]);
+							PT_CORE_ERROR_FUNCSIG("Spritesheet {} does not exist!", sprite["Texture"]);
 					}
 					else
 						spriteComponent.Sprite.SetTexture(texture);
@@ -343,7 +343,7 @@ namespace proton {
 					spriteComponent.Sprite.m_MirrorFlipX = sprite["Flip"][1];
 				}
 				else
-					PT_CORE_ERROR("[SceneSerializer::DeserializeEntity] Texture '{}' does not exist!", sprite["Texture"]);
+					PT_CORE_ERROR_FUNCSIG("Texture '{}' does not exist!", sprite["Texture"]);
 			}
 			
 			json& color = jsonObj["Sprite"]["Color"];

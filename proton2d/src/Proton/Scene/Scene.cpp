@@ -236,7 +236,7 @@ namespace proton {
 							// Initialize EntityScript instance
 							scriptInstance->m_Initialized = true;
 
-							if (hasRigidbodyComponent)
+							if (hasRigidbodyComponent && m_PhysicsWorld->IsInitialized())
 								scriptInstance->RetrieveRuntimeBody();
 
 							if (!scriptInstance->OnCreate()) 
@@ -419,7 +419,7 @@ namespace proton {
 	{
 		if (!entity || !entity.HasComponent<CameraComponent>())
 		{
-			PT_CORE_ERROR("[Scene::SetPrimaryCameraEntity] Entity does not have CameraComponent!");
+			PT_CORE_ERROR_FUNCSIG("Entity does not have CameraComponent!");
 			return;
 		}
 

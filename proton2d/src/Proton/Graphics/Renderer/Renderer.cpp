@@ -74,10 +74,10 @@ namespace proton {
 	{
 		switch (severity)
 		{
-		case GL_DEBUG_SEVERITY_HIGH:          PT_CORE_CRITICAL("[OpenGL Error] {}", message); return;
-		case GL_DEBUG_SEVERITY_MEDIUM:        PT_CORE_WARN("[OpenGL Warning] {}", message); return;
-		case GL_DEBUG_SEVERITY_LOW:           PT_CORE_WARN("[OpenGL Warning] {}", message); return;
-		case GL_DEBUG_SEVERITY_NOTIFICATION:  PT_CORE_INFO("[OpenGL Info] {}", message); return;
+		case GL_DEBUG_SEVERITY_HIGH:          PT_CORE_CRITICAL("[OpenGL] {}", message); return;
+		case GL_DEBUG_SEVERITY_MEDIUM:        PT_CORE_WARN("[OpenGL] {}", message); return;
+		case GL_DEBUG_SEVERITY_LOW:           PT_CORE_WARN("[OpenGL] {}", message); return;
+		case GL_DEBUG_SEVERITY_NOTIFICATION:  PT_CORE_INFO("[OpenGL] {}", message); return;
 		}
 	}
 

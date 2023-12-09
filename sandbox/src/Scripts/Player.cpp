@@ -15,9 +15,10 @@ void Player::OnRegisterFields()
 
 bool Player::OnCreate()
 {
+
 	if (!GetScene()->IsPhysicsEnabled())
 	{
-		PT_ERROR("[PlayerScript]: Physics is not enabled!");
+		PT_ERROR_FUNCSIG("Physics is not enabled!");
 		return false;
 	}
 

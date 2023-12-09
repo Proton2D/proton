@@ -98,7 +98,7 @@ namespace proton
 	{
 		if (!HasComponent<SpriteAnimationComponent>())
 			return &AddComponent<SpriteAnimationComponent>().SpriteAnimation;
-		PT_CORE_WARN("[Entity::CreateSpriteAnimation] Entity '{}' already has SpriteAnimationComponent!", GetTag());
+		PT_CORE_WARN_FUNCSIG(" Entity '{}' already has SpriteAnimationComponent!", GetTag());
 		return &GetComponent<SpriteAnimationComponent>().SpriteAnimation;
 	}
 

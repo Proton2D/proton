@@ -166,7 +166,7 @@ namespace proton {
 		if (s_GLFWWindowCount == 0)
 			glfwTerminate();
 		
-		PT_CORE_INFO("[WindowsWindow::Shutdown] GLFW Window terminated.");
+		PT_CORE_INFO_FUNCSIG("GLFW Window terminated.");
 	}
 
 	void WindowsWindow::OnUpdate()

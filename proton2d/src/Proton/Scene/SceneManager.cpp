@@ -40,7 +40,7 @@ namespace proton {
 	Scene* SceneManager::Load(const std::string& scenePath, bool setActive)
 	{
 		if (scenePath != "<Unsaved scene>")
-			PT_CORE_INFO("[SceneManager::Load] file='{}.scene.json'", scenePath);
+			PT_CORE_INFO_FUNCSIG("file='{}.scene.json'", scenePath);
 		std::string filepath = "content/scenes/" + scenePath + ".scene.json";
 		Scene* scene = s_Instance->Deserialize(scenePath, filepath);
 		if (setActive)
@@ -62,7 +62,7 @@ namespace proton {
 		SceneSerializer serializer(scene);
 		if (!serializer.Deserialize(fullFilepath))
 		{
-			PT_CORE_ERROR("[SceneManager::Deserialize] Loading '{}' failed!", fullFilepath);
+			PT_CORE_ERROR_FUNCSIG("Loading '{}' failed!", fullFilepath);
 			return nullptr;
 		}
 		s_Instance->m_Scenes[scenePath] = scene;
@@ -72,7 +72,7 @@ namespace proton {
 	void SceneManager::Unload(const std::string& scenePath)
 	{
 		if (scenePath != "<Unsaved scene>")
-			PT_CORE_INFO("[SceneManager::Unload] Scene '{}'", scenePath);
+			PT_CORE_INFO_FUNCSIG("Scene '{}'", scenePath);
 		delete s_Instance->m_Scenes.at(scenePath);
 		s_Instance->m_Scenes.erase(scenePath);
 	}
@@ -85,7 +85,7 @@ namespace proton {
 
 		if (!IsLoaded(scenePath))
 		{
-			PT_CORE_ERROR("[SceneManager::SetActiveScene] Scene '{}' not loaded!", scenePath);
+			PT_CORE_ERROR_FUNCSIG("Scene '{}' not loaded!", scenePath);
 			return nullptr;
 		}
 		Scene* targetScene = s_Instance->m_Scenes.at(scenePath);
@@ -108,7 +108,7 @@ namespace proton {
 		s_Instance->m_ActiveScene = targetScene;
 		s_Instance->m_ActiveScene->BeginPlay();
 #endif
-		PT_CORE_INFO("[SceneManager::SetActiveScene] scene='{}'", scenePath);
+		PT_CORE_INFO_FUNCSIG("scene='{}'", scenePath);
 
 		Renderer::SetClearColor(s_Instance->m_ActiveScene->m_ClearColor);
 		return s_Instance->m_ActiveScene;
@@ -118,7 +118,7 @@ namespace proton {
 	{
 		if (!IsLoaded(scenePath))
 		{
-			PT_CORE_ERROR("[SceneManager::SaveSceneAs] Scene '{}' not loaded!", scenePath);
+			PT_CORE_ERROR_FUNCSIG("Scene '{}' not loaded!", scenePath);
 			return;
 		}
 
@@ -146,7 +146,7 @@ namespace proton {
 	{
 		if (!IsLoaded(scenePath))
 		{
-			PT_CORE_ERROR("[SceneManager::GetScene] Scene not found!");
+			PT_CORE_ERROR_FUNCSIG("Scene not found!");
 			return nullptr;
 		}
 		return s_Instance->m_Scenes.at(scenePath);

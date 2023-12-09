@@ -32,4 +32,14 @@ namespace proton {
 		s_ClientLogger->set_level(spdlog::level::trace);
 		s_ClientLogger->flush_on(spdlog::level::trace);
 	}
+
+	std::string LoggerUtils::FormatFuncSignature(const std::string& funcsig)
+	{
+		size_t pos = funcsig.find("__cdecl ") + 8;
+		if (funcsig.find("proton::", pos) != std::string::npos)
+			pos += 8;
+		return funcsig.substr(pos, funcsig.find('(', pos) - pos) + ": ";
+	}
 }
+
+

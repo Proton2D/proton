@@ -56,7 +56,7 @@ namespace proton {
 	{
 		if (m_IsRunning)
 		{
-			PT_CORE_ERROR("[Application::Run] Application is already running!");
+			PT_CORE_ERROR_FUNCSIG("Application is already running!");
 			return;
 		}
 

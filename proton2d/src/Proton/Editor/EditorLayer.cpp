@@ -90,7 +90,7 @@ namespace proton {
 		// Check if cache directory exist
 		if (!std::filesystem::exists("editor/cache/"))
 			if (std::filesystem::create_directories("editor/cache/"))
-				PT_CORE_ERROR("[EditorLayer::OnCreate] Could not create cache directory!");
+				PT_CORE_ERROR_FUNCSIG("Could not create cache directory!");
 	
 		m_MiscPanel.m_SceneViewportPanel = &m_SceneViewportPanel;
 		m_EditorPanels.push_back(&m_SceneViewportPanel);

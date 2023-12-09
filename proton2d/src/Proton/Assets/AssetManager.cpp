@@ -20,11 +20,11 @@ namespace proton {
 		auto texture = MakeShared<Texture>(filepath);
 		if (!texture->IsLoaded()) 
 		{
-			PT_CORE_ERROR("[AssetManager::LoadTexture] Couldn't load texture '{}'", filepath);
+			PT_CORE_ERROR_FUNCSIG("Couldn't load texture '{}'", filepath);
 			return nullptr;
 		}
 
-		PT_CORE_INFO("[AssetManager::LoadTexture] file='{}'", filepath);
+		PT_CORE_INFO_FUNCSIG("file='{}'", filepath);
 		s_Instance->m_Textures[filepath] = texture;
 		return texture;
 	}
@@ -38,12 +38,12 @@ namespace proton {
 		auto& spritesheetList = s_Instance->m_SpritesheetList;
 		if (spritesheetList.find(filepath) == spritesheetList.end())
 		{
-			PT_CORE_ERROR("[AssetManager::LoadSpritesheet] Spritesheet not found in 'content/spritesheet.json'");
+			PT_CORE_ERROR_FUNCSIG("Spritesheet not found in 'content/spritesheet.json'");
 			return nullptr;
 		}
 
 		const auto& size = spritesheetList.at(filepath);
-		PT_CORE_INFO("[AssetManager::LoadSpritesheet] file='{}' tile_size=({},{})", filepath, size.x, size.y);
+		PT_CORE_INFO_FUNCSIG("file='{}' tile_size=({},{})", filepath, size.x, size.y);
 		return MakeShared<Spritesheet>(texture, size.x, size.y);
 	}
 
@@ -64,7 +64,7 @@ namespace proton {
 			if (LoadTexture(filepath))
 				return s_Instance->m_Textures[filepath];
 
-			PT_CORE_ERROR("[AssetManager::GetTexture] Texture not loaded '{}'", filepath);
+			PT_CORE_ERROR_FUNCSIG("Texture not loaded '{}'", filepath);
 			return nullptr;
 		}
 
@@ -78,7 +78,7 @@ namespace proton {
 			auto spritesheet = LoadSpritesheet(filepath);
 			if (!spritesheet)
 			{
-				PT_CORE_ERROR("[AssetManager::GetSpritesheet] Spritesheet not found '{}'", filepath);
+				PT_CORE_ERROR_FUNCSIG("Spritesheet not found '{}'", filepath);
 				return nullptr;
 			}
 			s_Instance->m_Spritesheets[filepath] = spritesheet;
