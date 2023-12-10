@@ -19,7 +19,7 @@ namespace proton {
 		static void Unload(const std::string& scenePath);
 		static bool IsLoaded(const std::string& scenePath);
 
-		static Scene* SetActiveScene(const std::string& scenePath, bool autoLoad = false);
+		static Scene* SetActiveScene(const std::string& scenePath, bool autoLoad = true);
 		static Scene* GetActiveScene();
 
 		static Scene* GetScene(const std::string& scenePath);

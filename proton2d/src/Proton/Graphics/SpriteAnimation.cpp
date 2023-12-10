@@ -13,33 +13,22 @@ namespace proton {
         m_Sprite = sprite;
     }
 
-    void SpriteAnimation::AddAnimation(uint16_t index, uint16_t frameCount)
+    void SpriteAnimation::AddAnimation(uint16_t index, uint16_t frameCount, AnimationPlayMode playmode)
     {
-        m_AnimationsFrameCount[index] = frameCount;
+        m_Animations[index] = Animation{ frameCount, playmode };
+        if (m_CurrentAnimationIndex == -1)
+            PlayAnimation(index);
     }
 
-    void SpriteAnimation::StartAnimation(uint16_t index, bool mirror_x, bool mirror_y)
+    void SpriteAnimation::PlayAnimation(uint16_t index, uint16_t startFrame)
     {
+        PT_CORE_ASSERT(m_Animations.find(index) != m_Animations.end(), "Animation not found");
         if (index != m_CurrentAnimationIndex)
         {
             m_CurrentAnimationIndex = index;
-            m_CurrentAnimationFrameCount = m_AnimationsFrameCount[index];
-            m_Sprite->SetTile(0, index);
+            m_CurrentAnimation = &m_Animations[index];
+            m_Sprite->SetTile(startFrame, index);
         }
-        SetMirrorFlip(mirror_x, mirror_y);
-    }
-
-    void SpriteAnimation::SetAnimation(uint16_t index, bool mirror_x, bool mirror_y)
-    {
-        PT_CORE_ASSERT(m_AnimationsFrameCount.find(index) != m_AnimationsFrameCount.end(), "Animation not found");
-        if (index != m_CurrentAnimationIndex)
-        {
-            m_CurrentAnimationIndex = index;
-            m_CurrentAnimationFrameCount = m_AnimationsFrameCount[index];
-            m_CurrentFrame %= m_CurrentAnimationFrameCount;
-            m_Sprite->SetTile(m_CurrentFrame, index);
-        }
-        SetMirrorFlip(mirror_x, mirror_y);
     }
 
     void SpriteAnimation::SetAnimationFrame(uint16_t frame)
@@ -53,13 +42,6 @@ namespace proton {
         m_Sprite->MirrorFlip(mirror_x, mirror_y);
     }
 
-    void SpriteAnimation::SetPlayMode(AnimationPlayMode mode, uint16_t startFrame, bool restartAnimation)
-    {
-        m_PlayMode = mode;
-        if (restartAnimation)
-            SetAnimationFrame(startFrame);
-    }
-
     void SpriteAnimation::Replay()
     {
         SetAnimationFrame(0);
@@ -67,31 +49,31 @@ namespace proton {
 
     float SpriteAnimation::GetProgress()
     {
-        if (!m_CurrentAnimationFrameCount)
+        if (!m_CurrentAnimation->FrameCount)
             return 0.0f;
-        return (float)m_CurrentFrame / m_CurrentAnimationFrameCount;
+        return (float)m_CurrentFrame / m_CurrentAnimation->FrameCount;
     }
 
     void SpriteAnimation::Update(float ts)
     {
-        if (!m_CurrentAnimationFrameCount)
+        if (!m_CurrentAnimation->FrameCount)
             return;
 
-        if (m_PlayMode == AnimationPlayMode::PAUSED)
+        if (m_CurrentAnimation->PlayMode == AnimationPlayMode::PAUSED)
             return;
 
         m_ElapsedTime += ts;
 
         if (m_ElapsedTime >= m_FrameTime)
         {
-            if (m_PlayMode == AnimationPlayMode::REPEAT)
+            if (m_CurrentAnimation->PlayMode == AnimationPlayMode::REPEAT)
             {
-                m_CurrentFrame %= m_CurrentAnimationFrameCount;
+                m_CurrentFrame %= m_CurrentAnimation->FrameCount;
                 m_Sprite->SetTile(m_CurrentFrame, m_Sprite->GetTilePos().y);
             }
             else // if (m_PlayMode == AnimationPlayMode::PLAY_ONCE)
             {
-                if (m_CurrentFrame < m_CurrentAnimationFrameCount)
+                if (m_CurrentFrame < m_CurrentAnimation->FrameCount)
                     m_Sprite->SetTile(m_CurrentFrame, m_Sprite->GetTilePos().y);
                 else
                     m_Sprite->SetTile(0, m_Sprite->GetTilePos().y);
@@ -104,7 +86,7 @@ namespace proton {
 
     bool SpriteAnimation::FinishedPlaying()
     {
-        return m_CurrentFrame == m_CurrentAnimationFrameCount;
+        return m_CurrentFrame == m_CurrentAnimation->FrameCount;
     }
 
     void SpriteAnimation::SetFPS(uint16_t fps)

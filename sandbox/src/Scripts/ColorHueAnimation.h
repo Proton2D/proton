@@ -37,7 +37,7 @@ public:
 	void UpdateHue(float ts, glm::vec4& colorRGBA)
 	{
 		glm::vec4 colorHSV = Utils::Graphics::RGBAtoHSV(colorRGBA);
-		float hue = glm::max(glm::min(colorHSV[0] + m_Speed * m_Direction * ts, m_HueRangeQ), m_HueRangeP);
+		float hue = glm::clamp(colorHSV[0] + m_Speed * m_Direction * ts, m_HueRangeP, m_HueRangeQ);
 		if (hue == m_HueRangeQ)
 		{
 			if (m_BackAndForth)

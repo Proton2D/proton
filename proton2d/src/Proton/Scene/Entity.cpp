@@ -114,6 +114,13 @@ namespace proton
 		}
 	}
 
+	Entity Entity::CreateChildEntity(const std::string& name)
+	{
+		Entity entity = m_Scene->CreateEntity(name);
+		AddChildEntity(entity, false);
+		return entity;
+	}
+
 	void Entity::Destroy()
 	{
 		m_Scene->DestroyEntity(*this);

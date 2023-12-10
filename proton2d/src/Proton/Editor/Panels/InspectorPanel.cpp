@@ -66,6 +66,12 @@ namespace proton {
 			{
 				for (auto& [scriptName, addScriptFunction] : ScriptFactory::Get().m_ScriptRegistry)
 				{
+					if (m_SelectedEntity.HasComponent<ScriptComponent>())
+					{
+						auto& component = m_SelectedEntity.GetComponent<ScriptComponent>();
+						if (component.Scripts.find(scriptName) != component.Scripts.end())
+							continue;
+					}
 					if (ImGui::MenuItem(scriptName.c_str()))
 						addScriptFunction(m_SelectedEntity);
 				}
@@ -406,13 +412,8 @@ namespace proton {
 			DrawComponentUI<CameraComponent>("Camera", [&](auto& component)
 				{
 					bool isPrimary = m_ActiveScene->m_PrimaryCameraEntity == m_SelectedEntity.m_Handle;
-					if (ImGui::Checkbox("Set as primary", &isPrimary))
-					{
-						if (isPrimary)
-							m_ActiveScene->SetPrimaryCameraEntity(m_SelectedEntity);
-						else
-							m_ActiveScene->SetPrimaryCameraEntity(Entity{});
-					}
+					if (ImGui::Checkbox("Set as primary", &isPrimary) && isPrimary)
+						m_ActiveScene->SetPrimaryCameraEntity(m_SelectedEntity);
 
 					float zoom = component.Camera.GetZoomLevel();
 					if (ImGui::DragFloat("Zoom level", &zoom, 0.01f))

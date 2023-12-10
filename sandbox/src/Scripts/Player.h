@@ -1,11 +1,6 @@
 #pragma once
 
-enum PlayerDirection : bool
-{
-	Right, Left
-};
-
-enum PlayerAnimation : uint32_t
+enum PlayerState : uint16_t
 {
 	Idle, Run, Jump, Land
 };
@@ -19,7 +14,8 @@ public:
 	virtual bool OnCreate() override;
 	virtual void OnUpdate(float ts) override;
 
-	virtual void OnImGuiRender() override;
+private:
+	bool IsTouchingGround() const { return *m_FootSensorContactCount > 0; }
 
 private:
 	float m_PlayerMaxSpeed = 6.0f;
@@ -27,15 +23,10 @@ private:
 	float m_PlayerAcceleration = 40.0f;
 	float m_GravityModifier = -10.0f;
 
+	PlayerState m_State = Idle;
 	SpriteAnimation* m_Animation;
-	PlayerDirection m_Direction = Right;
+	float m_Direction = 1.0f;
+	float m_JumpTimer = 0.0f;
 
-	float m_PlayerHorizontalVelocity = 0.0f;
-	bool m_IsJumping = false;
-	bool m_IsLanding = false;
-	float m_JumpDelay = 0.0f;
-	float m_LandDelay = 0.0f;
-
-	Entity m_FootSensor;
-	uint32_t m_ContactCount = 0;
+	uint32_t* m_FootSensorContactCount;
 };

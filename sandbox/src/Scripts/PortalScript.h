@@ -14,7 +14,7 @@ public:
 	{
 		m_SpriteAnimation = CreateSpriteAnimation();
 		m_SpriteAnimation->AddAnimation(0, 8);
-		m_SpriteAnimation->SetAnimation(0);
+		m_SpriteAnimation->PlayAnimation(0);
 		m_SpriteAnimation->SetFPS(10);
 
 		auto& bc = GetComponent<BoxColliderComponent>();
@@ -22,8 +22,8 @@ public:
 		{
 			if (contact.Other->GetTag() == "Player")
 			{
-				std::string level = "level_" + std::to_string(m_TargetLevel);
-				SceneManager::SetActiveScene(level, true);
+				std::string levelName = "level_" + std::to_string(m_TargetLevel);
+				SceneManager::SetActiveScene(levelName);
 			}
 		};
 		return true;

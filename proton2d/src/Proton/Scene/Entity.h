@@ -131,6 +131,8 @@ namespace proton {
 		// Add child Entity given as parameter
 		void AddChildEntity(Entity child, bool refreshChildWorldPosition = true);
 
+		Entity CreateChildEntity(const std::string& name);
+
 		// Destroy all child entities
 		void DestroyChildEntities();
 

@@ -3,8 +3,8 @@
     "Tag": "Player",
     "Transform": {
         "Position": [
-            2.82086,
-            -0.52962,
+            2.02879,
+            -0.73059,
             0.1
         ],
         "Rotation": 0.0,
@@ -78,7 +78,7 @@
                     "Value": 40.0
                 },
                 {
-                    "FieldName": "PlayerSpeed",
+                    "FieldName": "PlayerMaxSpeed",
                     "Value": 6.0
                 }
             ]

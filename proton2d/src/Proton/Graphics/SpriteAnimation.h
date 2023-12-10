@@ -18,13 +18,12 @@ namespace proton {
 		SpriteAnimation(Sprite* sprite);
 
 		// index - spritesheet Y tile pos (from image bottom)
-		void AddAnimation(uint16_t index, uint16_t frameCount);
+		void AddAnimation(uint16_t index, uint16_t frameCount, AnimationPlayMode playmode = AnimationPlayMode::REPEAT);
 		// index - spritesheet Y tile pos (from image bottom)
-		void StartAnimation(uint16_t index, bool mirror_x = false, bool mirror_y = false);
-		void SetAnimation(uint16_t index, bool mirror_x = false, bool mirror_y = false);
+		void PlayAnimation(uint16_t index, uint16_t startFrame = 0);
+		
 		void SetAnimationFrame(uint16_t frame);
 		void SetMirrorFlip(bool mirror_x = false, bool mirror_y = false);
-		void SetPlayMode(AnimationPlayMode mode, uint16_t startFrame = 0, bool restartAnimation = true);
 		void Replay();
 
 		float GetProgress();
@@ -40,11 +39,16 @@ namespace proton {
 
 		Sprite* m_Sprite = nullptr;
 		
-		std::unordered_map<uint16_t, uint16_t> m_AnimationsFrameCount;
-		uint16_t m_CurrentAnimationIndex = -1;
-		uint16_t m_CurrentAnimationFrameCount = 0;
+		struct Animation
+		{
+			uint16_t FrameCount;
+			AnimationPlayMode PlayMode;
+		};
 
-		AnimationPlayMode m_PlayMode = AnimationPlayMode::REPEAT;
+		std::unordered_map<uint16_t, Animation> m_Animations;
+		uint16_t m_CurrentAnimationIndex = -1;
+		Animation* m_CurrentAnimation = nullptr;
+		//uint16_t m_CurrentAnimationFrameCount = 0;
 
 		uint16_t m_FPS = 60;
 		uint16_t m_CurrentFrame = 0;

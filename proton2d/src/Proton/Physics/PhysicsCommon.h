@@ -31,6 +31,8 @@ namespace proton {
 
 	struct PhysicsContactCallback
 	{
+		uint32_t ContactCount = 0;
+
 		std::function<void(PhysicsContact contact)> 
 			OnBegin = nullptr;
 

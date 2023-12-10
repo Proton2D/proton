@@ -180,11 +180,15 @@ namespace proton {
 	void PhysicsContactListener::BeginContact(b2Contact* contact)
 	{
 		CALL_CONTACT_CALLBACK_FUNCTION(OnBegin);
+		bcA.ContactCallback.ContactCount++;
+		bcB.ContactCallback.ContactCount++;
 	}
 
 	void PhysicsContactListener::EndContact(b2Contact* contact)
 	{
 		CALL_CONTACT_CALLBACK_FUNCTION(OnEnd);
+		bcA.ContactCallback.ContactCount--;
+		bcB.ContactCallback.ContactCount--;
 	}
 
 	void PhysicsContactListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
