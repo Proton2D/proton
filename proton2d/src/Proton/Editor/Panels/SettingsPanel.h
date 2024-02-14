@@ -4,12 +4,17 @@
 
 namespace proton {
 
-	// TODO: Rework
-	class PrefabPanel : public EditorPanel
+	class SceneViewportPanel;
+
+	class SettingsPanel : public EditorPanel
 	{
 	public:
 		virtual void OnImGuiRender() override;
+
+		friend class Application;
+		friend class EditorLayer;
 	};
 
 }
-#endif
+
+#endif // PT_EDITOR

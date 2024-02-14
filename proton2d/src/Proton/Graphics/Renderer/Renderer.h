@@ -26,11 +26,14 @@ namespace proton {
 		static void DrawQuad(const glm::mat4& transform, const Sprite& sprite, const glm::vec4& tintColor = glm::vec4(1.0f), float tilingFactor = 1.0f);
 		static void DrawQuad(const glm::mat4& transform, const Shared<Texture>& texture, const TextureCoords& textureCoords, const glm::vec4& tintColor, float tilingFactor = 1.0f);
 
-		static void DrawLine(const glm::vec3& p0, glm::vec3& p1, const glm::vec4& color);
-		static void DrawDashedLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, float lineScale = 1.0f);
 		static void DrawRect(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
 		static void DrawRect(const glm::mat4& transform, const glm::vec4& color);
 		static void DrawDashedRect(const glm::mat4& transform, const glm::vec4& color, float lineScale = 1.0f);
+
+		static void DrawLine(const glm::vec3& p0, glm::vec3& p1, const glm::vec4& color);
+		static void DrawDashedLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, float lineScale = 1.0f);
+		
+		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness = 1.0f, float fade = 0.005f);
 
 		static void SetLineWidth(float width);
 		static void SetClearColor(glm::vec4 color);

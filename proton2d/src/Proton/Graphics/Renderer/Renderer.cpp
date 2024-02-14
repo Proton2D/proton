@@ -33,6 +33,15 @@ namespace proton {
 		glm::vec4 Color;
 	};
 
+	struct CircleVertex
+	{
+		glm::vec3 WorldPosition;
+		glm::vec3 LocalPosition;
+		glm::vec4 Color;
+		float Thickness;
+		float Fade;
+	};
+
 	static struct RendererData
 	{
 		uint32_t MaxQuads = 10000;
@@ -61,6 +70,14 @@ namespace proton {
 		uint32_t LineVertexCount = 0;
 		float LineWidth = 1.0f;
 
+		// Circles VertexBuffer data
+		Shared<VertexArray> CircleVertexArray;
+		Shared<VertexBuffer> CircleVertexBuffer;
+		Shared<Shader> CircleShader;
+		uint32_t CircleIndexCount = 0;
+		CircleVertex* CircleVertexBufferBase = nullptr;
+		CircleVertex* CircleVertexBufferPtr = nullptr;
+
 		// Textures and camera uniform buffer
 		std::vector<Shared<Texture>> TextureSlots;
 		uint32_t TextureSlotIndex = 1;
@@ -68,6 +85,7 @@ namespace proton {
 
 		// Stats
 		uint32_t OpenGLDrawCalls = 0;
+		uint32_t LastOpenGLDrawCalls = 0;
 	} data;
 
 	static void OpenGLMessageCallback(unsigned source, unsigned type, unsigned id, unsigned severity, int length, const char* message, const void* userParam)
@@ -120,7 +138,8 @@ namespace proton {
 		// Create quad vertex array
 		data.QuadVertexArray = MakeShared<VertexArray>();
 		data.QuadVertexArray->AddVertexBuffer(data.QuadVertexBuffer);
-		data.QuadVertexArray->SetIndexBuffer(MakeShared<IndexBuffer>(indicies, data.MaxIndices));
+		Shared<IndexBuffer> quadIB = MakeShared<IndexBuffer>(indicies, data.MaxIndices);
+		data.QuadVertexArray->SetIndexBuffer(quadIB);
 		delete[] indicies;
 
 		// Create line vertex buffer and vertex array
@@ -133,11 +152,30 @@ namespace proton {
 		data.LineVertexArray = MakeShared<VertexArray>();
 		data.LineVertexArray->AddVertexBuffer(data.LineVertexBuffer);
 
-		// Init texture slots vector, shaders and camera uniform buffer
+		// Circles
+		data.CircleVertexArray = MakeShared<VertexArray>();
+		data.CircleVertexBuffer = MakeShared<VertexBuffer>(data.MaxVertices * (uint32_t)sizeof(CircleVertex));
+		data.CircleVertexBuffer->SetLayout({
+			{ ShaderDataType::Float3, "WorldPosition" },
+			{ ShaderDataType::Float3, "LocalPosition" },
+			{ ShaderDataType::Float4, "Color"         },
+			{ ShaderDataType::Float,  "Thickness"     },
+			{ ShaderDataType::Float,  "Fade"          }
+		});
+		data.CircleVertexArray->AddVertexBuffer(data.CircleVertexBuffer);
+		data.CircleVertexArray->SetIndexBuffer(quadIB); // Use quad IB
+		data.CircleVertexBufferBase = new CircleVertex[data.MaxVertices];
+
+		// Init texture slots vector
 		data.TextureSlots.resize(data.MaxTextureSlots);
-		data.TextureSlots[0]     = MakeShared<Texture>(1, 1, true); // white texture
-		data.QuadShader          = MakeShared<Shader>("content/shaders/Quad2D.glsl");
-		data.LineShader          = MakeShared<Shader>("content/shaders/Line2D.glsl");
+		data.TextureSlots[0] = MakeShared<Texture>(1, 1, true); // white texture
+
+		// Shaders
+		data.QuadShader = MakeShared<Shader>("content/shaders/Quad2D.glsl");
+		data.LineShader = MakeShared<Shader>("content/shaders/Line2D.glsl");
+		data.CircleShader = MakeShared<Shader>("content/shaders/Circle2D.glsl");
+
+		// Camera shader uniform buffer
 		data.CameraUniformBuffer = MakeShared<UniformBuffer>((uint32_t)sizeof(glm::mat4), 0);
 	
 		SetClearColor(DEFAULT_CLEAR_COLOR);
@@ -155,6 +193,7 @@ namespace proton {
 		glm::mat4 viewMatrix = glm::inverse(glm::translate(glm::mat4(1.0f), position));
 		glm::mat4 viewProjection = camera.GetProjection() * viewMatrix;
 		data.CameraUniformBuffer->SetData(&viewProjection, sizeof(glm::mat4));
+		data.LastOpenGLDrawCalls = data.OpenGLDrawCalls;
 		data.OpenGLDrawCalls = 0;
 		StartBatch();
 	}
@@ -172,6 +211,9 @@ namespace proton {
 
 		data.LineVertexCount = 0;
 		data.LineVertexBufferPtr = data.LineVertexBufferBase;
+
+		data.CircleIndexCount = 0;
+		data.CircleVertexBufferPtr = data.CircleVertexBufferBase;
 		
 		data.TextureSlotIndex = 1;
 	}
@@ -201,6 +243,18 @@ namespace proton {
 			data.LineVertexArray->Bind();
 			glLineWidth(data.LineWidth);
 			glDrawArrays(GL_LINES, 0, data.LineVertexCount);
+			data.OpenGLDrawCalls++;
+		}
+
+		if (data.CircleIndexCount)
+		{
+			uint32_t dataSize = (uint32_t)((uint8_t*)data.CircleVertexBufferPtr - (uint8_t*)data.CircleVertexBufferBase);
+			data.CircleVertexBuffer->SetData(data.CircleVertexBufferBase, dataSize);
+
+			data.CircleShader->Bind();
+			data.CircleVertexArray->Bind();
+			glDrawElements(GL_TRIANGLES, data.CircleIndexCount, GL_UNSIGNED_INT, nullptr);
+			data.OpenGLDrawCalls++;
 		}
 	}
 
@@ -363,6 +417,27 @@ namespace proton {
 		DrawDashedLine(lineVertices[3], lineVertices[0], color, lineScale);
 	}
 
+	void Renderer::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade)
+	{
+		PROFILE_FUNCTION();
+
+		// TODO: implement for circles
+		// if (s_Data.QuadIndexCount >= Renderer2DData::MaxIndices)
+		// 	NextBatch();
+
+		for (size_t i = 0; i < 4; i++)
+		{
+			data.CircleVertexBufferPtr->WorldPosition = transform * QuadVertexPositions[i];
+			data.CircleVertexBufferPtr->LocalPosition = QuadVertexPositions[i] * 2.0f;
+			data.CircleVertexBufferPtr->Color = color;
+			data.CircleVertexBufferPtr->Thickness = thickness;
+			data.CircleVertexBufferPtr->Fade = fade;
+			data.CircleVertexBufferPtr++;
+		}
+
+		data.CircleIndexCount += 6;
+	}
+
 	void Renderer::SetLineWidth(float width)
 	{
 		data.LineWidth = width;
@@ -392,7 +467,7 @@ namespace proton {
 
 	uint32_t Renderer::GetDrawCallsCount()
 	{
-		return data.OpenGLDrawCalls;
+		return data.LastOpenGLDrawCalls;
 	}
 
 }

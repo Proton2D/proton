@@ -24,7 +24,7 @@ namespace proton {
 	void PrefabManager::ReloadAllPrefabs()
 	{
 		s_Instance->m_PrefabsJsonData.clear();
-		for (const auto& prefabFile : Utils::ScanDirectoryRecursive("content/prefabs", { ".prefab.json" }, false))
+		for (const auto& prefabFile : Utils::ScanDirectoryRecursive("content/prefabs", { ".prefab.json" }))
 			LoadPrefab(prefabFile);
 	}
 
@@ -41,12 +41,11 @@ namespace proton {
 
 	bool PrefabManager::LoadPrefab(const std::string& prefabPath)
 	{
-		std::string rawData = Utils::ReadFile("content/prefabs/" + prefabPath + ".prefab.json");
+		std::string rawData = Utils::ReadFile("content/prefabs/" + prefabPath);
 		if (rawData.size())
 		{
 			json jsonData = json::parse(rawData);
-			if (jsonData.contains("Tag"))
-				s_Instance->m_PrefabsJsonData[prefabPath] = jsonData;
+			s_Instance->m_PrefabsJsonData[prefabPath] = jsonData;
 			return true;
 		}
 		return false;
@@ -56,7 +55,7 @@ namespace proton {
 	{
 		if (Exists(prefabPath))
 		{
-			if (remove(("content/prefabs/" + prefabPath + ".prefab.json").c_str()) == 0)
+			if (remove(("content/prefabs/" + prefabPath).c_str()) == 0)
 			{
 				s_Instance->m_PrefabsJsonData.erase(prefabPath);
 				return true;
@@ -72,14 +71,24 @@ namespace proton {
 
 	Entity PrefabManager::SpawnPrefab(Scene* scene, const std::string& prefabPath)
 	{
-		PT_CORE_ASSERT(Exists(prefabPath), "Prefab not loaded");
+		if (!Exists(prefabPath))
+		{
+			if (!LoadPrefab(prefabPath))
+			{
+				PT_CORE_ERROR_FUNCSIG("Prefab '{}' not found", prefabPath);
+				return Entity();
+			}
+		}
+
 		SceneSerializer serializer(scene);
 		const json& prefabData = s_Instance->m_PrefabsJsonData.at(prefabPath);
 		Entity entity = serializer.DeserializeEntity(prefabData, false);
+		
 		auto camera = scene->GetPrimaryCameraPosition();
 		auto& transform = entity.GetComponent<TransformComponent>();
 		transform.WorldPosition.x = camera.x;
 		transform.WorldPosition.y = camera.y;
+		
 		return entity;
 	}
 

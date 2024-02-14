@@ -50,6 +50,11 @@ namespace proton {
 		}
 	}
 
+	void EditorCamera::SetPosition(const glm::vec3& position)
+	{
+		m_Position = position;
+	}
+
 	void EditorCamera::OnViewportResize(float w, float h)
 	{
 		m_Camera.SetAspectRatio(w / h);

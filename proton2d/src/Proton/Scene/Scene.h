@@ -151,10 +151,10 @@ namespace proton {
 		
 		friend class EditorLayer;
 		friend class EditorCamera;
-		friend class MiscellaneousPanel;
+		friend class SettingsPanel;
 		friend class InspectorPanel;
 		friend class SceneHierarchyPanel;
-		friend class ScenePanel;
+		friend class ToolbarPanel;
 		friend class EditorMenuBar;
 		friend class SceneViewportPanel;
 	};

@@ -2,24 +2,29 @@
 #ifdef PT_EDITOR
 #include "Proton/Editor/Panels/SceneViewportPanel.h"
 #include "Proton/Editor/EditorLayer.h"
+#include "Proton/Editor/EditorCamera.h"
 #include "Proton/Graphics/Renderer/Renderer.h"
 #include "Proton/Core/Application.h"
 #include "Proton/Events/KeyEvents.h"
 #include "Proton/Events/MouseEvents.h"
+#include "Proton/Core/Input.h"
 #include "Proton/Utils/Utils.h"
 #include "Proton/Scene/SceneManager.h"
+#include "Proton/Scene/PrefabManager.h"
 
 #include <imgui.h>
+#include <filesystem> // remove
 
 namespace proton {
 
-	SceneViewportPanel::SceneViewportPanel()
+	void SceneViewportPanel::OnCreate()
 	{
 		FramebufferSpecification fbSpec;
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 		m_Framebuffer = MakeShared<Framebuffer>(fbSpec);
+		m_Camera = MakeUnique<EditorCamera>();
 	}
 
 	void SceneViewportPanel::OnImGuiRender()
@@ -41,8 +46,17 @@ namespace proton {
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-		uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		if (m_ActiveScene)
+		{
+			uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+			ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		}
+		else
+		{
+			ImGui::Dummy(ImVec2{ m_ViewportSize.x, m_ViewportSize.y });
+		}
+ 
+		HandleImGuiDragAndDrop();
 
 		ImGui::End();
 		ImGui::PopStyleVar();
@@ -50,6 +64,9 @@ namespace proton {
 
 	void SceneViewportPanel::OnUpdate(float ts)
 	{
+		if (!m_ActiveScene)
+			return;
+
 		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		// On viewport resize
 		FramebufferSpecification spec = m_Framebuffer->GetSpecification();
@@ -57,7 +74,7 @@ namespace proton {
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
 			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_Camera.OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
+			m_Camera->OnViewportResize(m_ViewportSize.x, m_ViewportSize.y);
 			Renderer::SetViewport(0, 0, (uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
@@ -79,7 +96,7 @@ namespace proton {
 		const glm::vec2& cursor = m_ActiveScene->GetCursorWorldPosition();
 
 		// Update editor camera
-		m_Camera.OnUpdate(ts);
+		m_Camera->OnUpdate(ts);
 
 		// Move selected entity
 		if (m_MoveSelectedEntity && m_SelectedEntity.IsValid())
@@ -95,15 +112,18 @@ namespace proton {
 		if (m_MoveEditorCamera)
 		{
 			glm::vec2 offset = m_CameraDragOffset - cursor;
-			m_Camera.m_Position.x += offset.x;
-			m_Camera.m_Position.y += offset.y;
+			m_Camera->m_Position.x += offset.x;
+			m_Camera->m_Position.y += offset.y;
 			ImGui::SetMouseCursor(2);
 		}
 	}
 
 	void SceneViewportPanel::OnEvent(Event& event)
 	{
-		m_Camera.OnEvent(event);
+		if (!m_ActiveScene)
+			return;
+
+		m_Camera->OnEvent(event);
 		const glm::vec2& cursor = m_ActiveScene->GetCursorWorldPosition();
 
 		EventDispatcher dispatcher(event);
@@ -115,7 +135,7 @@ namespace proton {
 
 			// Mouse Button 1 (Right): Move editor camera
 			if (e.GetMouseButton() == Mouse::Button1 && !m_MoveEditorCamera
-				&& (state == SceneState::Stop || m_Camera.m_UseInRuntime))
+				&& (state == SceneState::Stop || m_Camera->m_UseInRuntime))
 			{
 				m_CameraDragOffset = cursor;
 				m_MoveEditorCamera = true;
@@ -128,7 +148,7 @@ namespace proton {
 
 				for (auto& entity : m_ActiveScene->GetEntitiesOnCursorLocation())
 				{
-					if (!entity.HasComponent<SpriteComponent>() && !entity.HasComponent<ResizableSpriteComponent>())
+					if (!entity.HasAnyComponent<SpriteComponent, ResizableSpriteComponent, CircleRendererComponent>())
 						continue;
 
 					auto& transform = entity.GetComponent<TransformComponent>();
@@ -199,11 +219,6 @@ namespace proton {
 		});
 	}
 
-	void SceneViewportPanel::ResetCameraPosition()
-	{
-		m_Camera.m_Position = { 0.0f, 0.0f, 0.0f };
-	}
-
 	void SceneViewportPanel::DrawCollidersAndSelectionOutline()
 	{
 		Renderer::BeginScene(m_ActiveScene->GetPrimaryCamera(), m_ActiveScene->GetPrimaryCameraPosition());
@@ -230,6 +245,28 @@ namespace proton {
 			}
 		}
 
+		// Draw circle colliders
+		auto ccView = m_ActiveScene->m_Registry.view<TransformComponent, CircleColliderComponent>();
+		for (auto entity : ccView)
+		{
+			auto [transform, cc] = ccView.get<TransformComponent, CircleColliderComponent>(entity);
+
+			// Check if current entity is selected and draw collider rect
+			bool drawSelected = m_ShowSelectionCollider && m_SelectedEntity.m_Handle == entity;
+
+			if (m_ShowAllColliders || drawSelected)
+			{
+				float zPos = (m_ShowAllColliders && drawSelected) ? 0.205f : 0.2f;
+				glm::vec4 color = (m_ShowAllColliders && drawSelected)
+					? glm::vec4{ 0.9f, 0.3f, 0.3f, 0.5f } : glm::vec4{ 0.9f, 0.6f, 0.3f, 0.5f };
+				glm::vec3 position = { transform.WorldPosition.x + cc.Offset.x, transform.WorldPosition.y + cc.Offset.y, zPos };
+				glm::vec3 scale = { cc.Radius * transform.Scale.x, cc.Radius * transform.Scale.y, 1.0f };
+				glm::mat4 transformMatrix = Math::GetTransform(position, scale, transform.Rotation);
+
+				Renderer::DrawCircle(transformMatrix, color);
+			}
+		}
+
 		// Draw selected entity outline
 		if (m_SelectedEntity.IsValid() && m_ShowSelectionOutline)
 		{
@@ -250,10 +287,37 @@ namespace proton {
 					scale.x *= (float)pixelSize.x / (float)pixelSize.y;
 			}
 			Renderer::SetLineWidth(glm::min(50.0f * padding, 1.0f));
-			Renderer::DrawDashedRect(transformMatrix, color, m_Camera.m_Camera.GetZoomLevel());
+			Renderer::DrawDashedRect(transformMatrix, color, m_Camera->m_Camera.GetZoomLevel());
 		}
 
 		Renderer::EndScene();
+	}
+
+	void SceneViewportPanel::HandleImGuiDragAndDrop()
+	{
+		if (ImGui::BeginDragDropTarget())
+		{
+			const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_PREFAB");
+			if (payload && m_ActiveScene)
+			{
+				const wchar_t* path_wchar = (const wchar_t*)payload->Data;
+				std::filesystem::path path(path_wchar);
+
+				Entity entity = PrefabManager::SpawnPrefab(m_ActiveScene, path.string());
+				auto& transform = entity.GetComponent<TransformComponent>();
+				glm::vec2 cameraPos = m_ActiveScene->GetCursorWorldPosition();
+				entity.SetWorldPosition({ cameraPos.x, cameraPos.y, transform.WorldPosition.z });
+			}
+			payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_SCENE");
+			if (payload)
+			{
+				const wchar_t* path_wchar = (const wchar_t*)payload->Data;
+				std::filesystem::path path(path_wchar);
+				SceneManager::Load(path.replace_extension().replace_extension().string(), true);
+			}
+
+			ImGui::EndDragDropTarget();
+		}
 	}
 
 }

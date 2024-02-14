@@ -1,0 +1,69 @@
+{
+    "UUID": 14438695250712363177,
+    "Tag": "Circle",
+    "Transform": {
+        "Position": [
+            2.91453,
+            4.96454,
+            0.061
+        ],
+        "Rotation": 0.0,
+        "Scale": [
+            1.0,
+            1.0
+        ]
+    },
+    "CircleRenderer": {
+        "Thickness": 1.0,
+        "Fade": 0.004999999888241291,
+        "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ]
+    },
+    "Rigidbody": {
+        "Type": 2,
+        "FixedRotation": false
+    },
+    "CircleCollider": {
+        "Offset": [
+            0.0,
+            0.0
+        ],
+        "Radius": 1.0,
+        "Friction": 0.5,
+        "Restitution": 0.75,
+        "RestitutionThreshold": 0.5,
+        "Density": 0.5,
+        "IsSensor": false
+    },
+    "Scripts": [
+        {
+            "ClassName": "ColorHueAnimation",
+            "Fields": [
+                {
+                    "FieldName": "Back and Forth",
+                    "Value": false
+                },
+                {
+                    "FieldName": "HueRangeP",
+                    "Value": 0.0
+                },
+                {
+                    "FieldName": "HueRangeQ",
+                    "Value": 1.0
+                },
+                {
+                    "FieldName": "Saturation",
+                    "Value": 0.800000011920929
+                },
+                {
+                    "FieldName": "Speed",
+                    "Value": 0.2800000011920929
+                }
+            ]
+        }
+    ]
+}

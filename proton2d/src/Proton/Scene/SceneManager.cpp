@@ -71,10 +71,24 @@ namespace proton {
 
 	void SceneManager::Unload(const std::string& scenePath)
 	{
-		if (scenePath != "<Unsaved scene>")
-			PT_CORE_INFO_FUNCSIG("Scene '{}'", scenePath);
-		delete s_Instance->m_Scenes.at(scenePath);
+		Scene* scene = s_Instance->m_Scenes.at(scenePath);
+		if (!scene)
+		{
+			PT_CORE_ERROR_FUNCSIG("scene='{}' not found", scenePath);
+			return;
+		}
+		bool isActive = scene == s_Instance->m_ActiveScene;
+		std::string name = scenePath;
+		delete scene;
 		s_Instance->m_Scenes.erase(scenePath);
+		if (scenePath != "<Unsaved scene>")
+		{
+			PT_CORE_INFO_FUNCSIG("scene='{}'", name);
+			if (isActive && s_Instance->m_Scenes.size())
+				SetActiveScene(s_Instance->m_Scenes.begin()->first);
+			else if (isActive)
+				EditorLayer::SetActiveScene(nullptr);
+		}
 	}
 
 	// TODO: Refactor this function
@@ -94,15 +108,12 @@ namespace proton {
 		if (IsLoaded("<Unsaved scene>"))
 		{
 			Scene* scene = GetScene("<Unsaved scene>");
-			if (!scene->m_Registry.size() && s_Instance->m_Scenes.size() > 1)
+			if (!scene->GetEntitiesCount() && s_Instance->m_Scenes.size() > 1)
 				Unload("<Unsaved scene>");
 		}
-		if (s_Instance->m_ActiveScene->m_SceneState == SceneState::Play && targetScene->m_SceneState != SceneState::Play)
-			targetScene->BeginPlay();
 
 		s_Instance->m_ActiveScene = targetScene;
 		EditorLayer::SetActiveScene(targetScene);
-		EditorLayer::SelectEntity({});
 
 #else
 		s_Instance->m_ActiveScene = targetScene;

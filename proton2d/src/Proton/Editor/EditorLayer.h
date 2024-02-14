@@ -2,17 +2,12 @@
 #ifdef PT_EDITOR
 #include "Proton/Editor/EditorCamera.h"
 #include "Proton/Editor/EditorMenuBar.h"
-#include "Proton/Editor/Panels/MiscellaneousPanel.h"
-#include "Proton/Editor/Panels/InspectorPanel.h"
-#include "Proton/Editor/Panels/SceneHierarchyPanel.h"
-#include "Proton/Editor/Panels/SceneViewportPanel.h"
-#include "Proton/Editor/Panels/ScenePanel.h"
-#include "Proton/Editor/Panels/PrefabPanel.h"
-
 #include "Proton/Core/AppLayer.h"
 #include "Proton/Core/Config.h"
 #include "Proton/Scene/Entity.h"
 #include "Proton/Graphics/Renderer/Framebuffer.h"
+
+struct ImFont;
 
 namespace proton {
 
@@ -32,44 +27,48 @@ namespace proton {
 		virtual void OnEvent(Event& event) override;
 
 		static EditorLayer* Get() { return s_Instance; }
+		static EditorCamera* GetCamera();
+		static SceneViewportPanel* GetSceneViewportPanel();
+		static ImFont* GetFontAwesome();
+		static ImFont* GetSmallFont();
 
 		static void SetActiveScene(Scene* scene);
 		static void SelectEntity(Entity entity);
 
-		static EditorCamera& GetCamera();
 
 	private:
+		void SetupFonts();
+		void SetupThemeStyle();
+		void SetupImGuiViewports();
+		void InitializeImGui();
+
 		void BeginImGuiRender();
 		void EndImGuiRender();
 
 	private:
 		static EditorLayer* s_Instance;
+
+		bool m_EnableViewports = false; // true: ImGui windows can be detached from main GLFW window
+
 		Scene* m_ActiveScene = nullptr;
 		Entity m_SelectedEntity;
 
 		EditorConfig m_Config;
 		EditorMenuBar m_MenuBar;
 
-		MiscellaneousPanel m_MiscPanel;
-		InspectorPanel m_InspectorPanel;
-		SceneHierarchyPanel m_SceneHiearchyPanel;
-		ScenePanel m_ScenePanel;
-		PrefabPanel m_PrefabPanel;
-		SceneViewportPanel m_SceneViewportPanel;
-
 		std::vector<EditorPanel*> m_EditorPanels;
-
-		bool m_EnableViewports = false; // when set to true ImGui windows can be detached from main GLFW window
 		bool m_BlockEvents = true;
 
 		friend class Application;
 		friend class Scene;
 
-		friend class InspectorPanel;
-		friend class MiscellaneousPanel;
-		friend class ScenePanel;
-		friend class EditorCamera;
 		friend class SceneViewportPanel;
+		friend class InspectorPanel;
+		friend class SettingsPanel;
+		friend class InfoPanel;
+		friend class ToolbarPanel;
+		friend class EditorCamera;
+		friend class EditorMenuBar;
 	};
 
 }

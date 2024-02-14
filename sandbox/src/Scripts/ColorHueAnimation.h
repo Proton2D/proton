@@ -22,6 +22,9 @@ public:
 		if (HasComponent<ResizableSpriteComponent>())
 			m_ResizableSprite = &GetComponent<ResizableSpriteComponent>();
 
+		if (HasComponent<CircleRendererComponent>())
+			m_CircleRenderer = &GetComponent<CircleRendererComponent>();
+
 		return true;
 	}
 
@@ -32,6 +35,9 @@ public:
 
 		if (m_ResizableSprite)
 			UpdateHue(ts, m_ResizableSprite->Color);
+
+		if (m_CircleRenderer)
+			UpdateHue(ts, m_CircleRenderer->Color);
 	}
 
 	void UpdateHue(float ts, glm::vec4& colorRGBA)
@@ -74,4 +80,5 @@ private:
 
 	SpriteComponent* m_Sprite = nullptr;
 	ResizableSpriteComponent* m_ResizableSprite = nullptr;
+	CircleRendererComponent* m_CircleRenderer = nullptr;
 };

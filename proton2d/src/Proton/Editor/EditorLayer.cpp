@@ -1,14 +1,21 @@
 #include "ptpch.h"
 #ifdef PT_EDITOR
 #include "Proton/Editor/EditorLayer.h"
+#include "Proton/Editor/Panels/SceneViewportPanel.h"
+#include "Proton/Editor/Panels/InspectorPanel.h"
+#include "Proton/Editor/Panels/SceneHierarchyPanel.h"
+#include "Proton/Editor/Panels/ToolbarPanel.h"
+#include "Proton/Editor/Panels/ContentBrowserPanel.h"
+#include "Proton/Editor/Panels/SettingsPanel.h"
+#include "Proton/Editor/Panels/InfoPanel.h"
 
-#include "Proton/Graphics/Renderer/Renderer.h"
-#include "Proton/Graphics/Renderer/Framebuffer.h"
 #include "Proton/Core/Application.h"
 #include "Proton/Core/Window.h"
-#include "Proton/Utils/Utils.h"
-#include "Proton/Events/MouseEvents.h"
+#include "Proton/Graphics/Renderer/Renderer.h"
+#include "Proton/Graphics/Renderer/Framebuffer.h"
 #include "Proton/Events/KeyEvents.h"
+#include "Proton/Events/MouseEvents.h"
+#include "Proton/Utils/Utils.h"
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #include <backends/imgui_impl_opengl3.h>
@@ -17,8 +24,26 @@
 #include <backends/imgui_impl_glfw.cpp>
 
 #include <imgui.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace proton {
+
+	struct EditorPanels
+	{
+		SettingsPanel Settings;
+		InfoPanel Info;
+		InspectorPanel Inspector;
+		SceneHierarchyPanel SceneHiearchy;
+		ToolbarPanel Toolbar;
+		ContentBrowserPanel ContentBrowser;
+		SceneViewportPanel SceneViewport;
+	} static s_Panels;
+
+	struct EditorFonts
+	{
+		ImFont* FontAwesome = nullptr;
+		ImFont* SmallFont = nullptr;
+	} static s_Fonts;
 
 	EditorLayer* EditorLayer::s_Instance = nullptr;
 
@@ -33,72 +58,31 @@ namespace proton {
 		ImGui::CreateContext();
 		ImGui::StyleColorsDark();
 
-		// Font
-		auto& io = ImGui::GetIO();
-		const EditorConfig::Font font = m_Config.EditorFonts["roboto"];
-		io.Fonts->AddFontFromFileTTF(font.FontFilepath.c_str(), font.FontSize);
-		
-		io.ConfigFlags = ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
-		// Enable viewports (ImGui windows can be detached from main application window)
-		if (m_EnableViewports)
-			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		SetupFonts();
+		SetupImGuiViewports();
+		SetupThemeStyle();
 
-		// Styles
-		ImGuiStyle& style = ImGui::GetStyle();
-		style.FrameRounding = 7.0f;
-		style.PopupRounding = 7.0f;
-		style.ScrollbarSize = 20.0f;
-		style.WindowBorderSize = 0.0f;
+		// Initialize ImGui implementation for GLFW
+		InitializeImGui();
 
-		// Theme styles
-		// TODO: Move values to editor config file
-		style.Colors[ImGuiCol_Border] = ImVec4(0.28f, 0.12f, 0.12f, 1.0f);;
-		style.Colors[ImGuiCol_FrameBg] = ImVec4(0.28f, 0.12f, 0.12f, 1.0f);
+		// Store editor panels in vector
+		m_EditorPanels.push_back(&s_Panels.Settings);
+		m_EditorPanels.push_back(&s_Panels.Info);
+		m_EditorPanels.push_back(&s_Panels.Inspector);
+		m_EditorPanels.push_back(&s_Panels.SceneHiearchy);
+		m_EditorPanels.push_back(&s_Panels.Toolbar);
+		m_EditorPanels.push_back(&s_Panels.ContentBrowser);
+		m_EditorPanels.push_back(&s_Panels.SceneViewport);
 
-		style.Colors[ImGuiCol_Button] = ImVec4(0.5f, 0.12f, 0.12f, 1.0f);;
-		style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.6f, 0.12f, 0.12f, 1.0f);;
-		style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.7f, 0.12f, 0.12f, 1.0f);;
-
-		style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.7f);
-		style.Colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-
-		ImVec4 headerColor = ImVec4(0.5f, 0.12f, 0.12f, 1.0f);
-		style.Colors[ImGuiCol_Header] = headerColor;
-		style.Colors[ImGuiCol_HeaderHovered] = headerColor;
-		style.Colors[ImGuiCol_HeaderActive] = headerColor;
-
-		ImVec4 titleColor = ImVec4(0.32f, 0.12f, 0.12f, 1.0f);
-		style.Colors[ImGuiCol_TitleBg] = titleColor;
-		style.Colors[ImGuiCol_TitleBgActive] = titleColor;
-
-		ImVec4 tabColor = ImVec4(0.5f, 0.2f, 0.1f, 1.0f);
-		style.Colors[ImGuiCol_TabUnfocusedActive] = tabColor;
-		style.Colors[ImGuiCol_TabHovered] = tabColor;
-		style.Colors[ImGuiCol_TabActive] = tabColor;
-
-		if (m_EnableViewports && io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
-
-		// Initialize ImGui
-		auto window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 410");
+		for (EditorPanel* panel : m_EditorPanels)
+			panel->OnCreate();
 
 		// Check if cache directory exist
 		if (!std::filesystem::exists("editor/cache/"))
+		{
 			if (std::filesystem::create_directories("editor/cache/"))
 				PT_CORE_ERROR_FUNCSIG("Could not create cache directory!");
-	
-		m_MiscPanel.m_SceneViewportPanel = &m_SceneViewportPanel;
-		m_EditorPanels.push_back(&m_SceneViewportPanel);
-		m_EditorPanels.push_back(&m_SceneHiearchyPanel);
-		m_EditorPanels.push_back(&m_InspectorPanel);
-		m_EditorPanels.push_back(&m_MiscPanel);
-		m_EditorPanels.push_back(&m_ScenePanel);
-		m_EditorPanels.push_back(&m_PrefabPanel);
+		}
 	}
 
 	void EditorLayer::OnDestroy()
@@ -123,6 +107,8 @@ namespace proton {
 		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
 		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
+		ImGui::PushStyleVar(ImGuiStyleVar_TabBarBorderSize, 0.0f);
+
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(viewport->Pos);
 		ImGui::SetNextWindowSize(viewport->Size);
@@ -133,8 +119,7 @@ namespace proton {
 
 		static bool dockspaceOpen = true;
 		ImGui::Begin("DockSpace", &dockspaceOpen, window_flags);
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar(2);
+		ImGui::PopStyleVar(3);
 
 		// DockSpace
 		ImGuiIO& io = ImGui::GetIO();
@@ -156,6 +141,7 @@ namespace proton {
 			panel->OnImGuiRender();
 
 		ImGui::End(); // DockSpace
+		ImGui::PopStyleVar();
 	}
 
 	void EditorLayer::OnEvent(Event& event)
@@ -163,7 +149,7 @@ namespace proton {
 		ImGuiIO& io = ImGui::GetIO();
 
 		// Block events if viewport is not hovered by mouse
-		if (m_BlockEvents && !m_SceneViewportPanel.m_MoveEditorCamera)
+		if (m_BlockEvents && !s_Panels.SceneViewport.m_MoveEditorCamera)
 		{
 			event.Handled |= event.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
 			event.Handled |= event.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
@@ -180,11 +166,18 @@ namespace proton {
 			panel->OnEvent(event);
 	}
 
+	SceneViewportPanel* EditorLayer::GetSceneViewportPanel()
+	{
+		return &s_Panels.SceneViewport;
+	}
+
 	void EditorLayer::SetActiveScene(Scene* scene)
 	{
 		s_Instance->m_ActiveScene = scene;
 		for (auto& panel : s_Instance->m_EditorPanels)
 			panel->m_ActiveScene = scene;
+		
+		EditorLayer::SelectEntity({});
 	}
 
 	void EditorLayer::SelectEntity(Entity entity)
@@ -194,9 +187,93 @@ namespace proton {
 			panel->m_SelectedEntity = entity;
 	}
 
-	EditorCamera& EditorLayer::GetCamera() 
+	EditorCamera* EditorLayer::GetCamera()
 	{
-		return s_Instance->m_SceneViewportPanel.m_Camera; 
+		return s_Panels.SceneViewport.m_Camera.get();
+	}
+
+	ImFont* EditorLayer::GetFontAwesome()
+	{
+		return s_Fonts.FontAwesome;
+	}
+
+	ImFont* EditorLayer::GetSmallFont()
+	{
+		return s_Fonts.SmallFont;
+	}
+
+	void EditorLayer::SetupFonts()
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		// Main font
+		const EditorConfig::Font font = m_Config.EditorFonts["roboto"];
+		io.Fonts->AddFontFromFileTTF(font.FontFilepath.c_str(), font.FontSize);
+		// Small font
+		s_Fonts.SmallFont = io.Fonts->AddFontFromFileTTF(font.FontFilepath.c_str(), 14.0f);
+		// Font Awesome
+		static const ImWchar icons_ranges[] = { 0xE000, 0xF8FF, 0 };
+		s_Fonts.FontAwesome = io.Fonts->AddFontFromFileTTF("editor/content/font/FontAwesome.ttf", 18.0f, NULL, icons_ranges);
+	}
+
+	void EditorLayer::SetupThemeStyle()
+	{
+		// Styles
+		ImGuiStyle& style = ImGui::GetStyle();
+		ImGuiIO& io = ImGui::GetIO();
+
+		style.FrameRounding = 7.0f;
+		style.PopupRounding = 7.0f;
+		style.ScrollbarSize = 20.0f;
+		style.WindowBorderSize = 0.0f;
+
+		// Color styles
+		style.Colors[ImGuiCol_Border] = ImVec4(0.18f, 0.18f, 0.18f, 1.0f);
+		style.Colors[ImGuiCol_FrameBg] = ImVec4(0.18f, 0.18f, 0.18f, 1.0f);
+
+		style.Colors[ImGuiCol_Button] = ImVec4(0.4f, 0.18f, 0.19f, 1.0f);
+		style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.5f, 0.18f, 0.19f, 1.0f);
+		style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.6f, 0.18f, 0.19f, 1.0f);
+
+		style.Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.1f, 0.1f, 0.7f);
+		style.Colors[ImGuiCol_CheckMark] = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+
+		style.Colors[ImGuiCol_Header] = ImVec4(0.32f, 0.32f, 0.32f, 1.0f);
+		style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.32f, 0.32f, 0.32f, 1.0f);
+		style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.32f, 0.32f, 0.32f, 1.0f);
+
+		style.Colors[ImGuiCol_TitleBg] = ImVec4(0.23f, 0.23f, 0.22f, 1.0f);
+		style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.23f, 0.23f, 0.22f, 1.0f);
+
+		style.Colors[ImGuiCol_Tab] = ImVec4(0.18f, 0.18f, 0.18f, 1.0f);
+		style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.18f, 0.18f, 0.18f, 1.0f);
+		style.Colors[ImGuiCol_TabHovered] = ImVec4(0.4f, 0.4f, 0.4f, 1.0f);
+		style.Colors[ImGuiCol_TabActive] = ImVec4(0.4f, 0.4f, 0.4f, 1.0f);
+	}
+
+	void EditorLayer::SetupImGuiViewports()
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		ImGuiStyle& style = ImGui::GetStyle();
+
+		io.ConfigFlags = ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
+		// Enable viewports (ImGui windows can be detached from main application window)
+		if (m_EnableViewports)
+			io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+		if (m_EnableViewports && io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			style.WindowRounding = 0.0f;
+			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		}
+	}
+
+	void EditorLayer::InitializeImGui()
+	{
+		auto window = (GLFWwindow*)Application::Get().GetWindow().GetNativeWindow();
+		ImGui_ImplGlfw_InitForOpenGL(window, true);
+		ImGui_ImplOpenGL3_Init("#version 410");
 	}
 
 	void EditorLayer::BeginImGuiRender()

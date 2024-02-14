@@ -56,9 +56,11 @@ namespace proton {
 
 		friend class Renderer;
 		friend class Scene;
+		friend class Entity;
+		friend class AssetManager;
+
 		friend class InspectorPanel;
 		friend class SceneSerializer;
-		friend class Entity;
 	};
 
 }

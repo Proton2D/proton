@@ -11,6 +11,7 @@
 
 #ifdef PT_EDITOR
 #include "Proton/Editor/EditorLayer.h"
+#include "Proton/Editor/Panels/SceneViewportPanel.h"
 #include <imgui.h>
 #endif
 
@@ -124,7 +125,7 @@ namespace proton {
 
 	void Scene::DestroyAll()
 	{
-		m_Registry.each([&](entt::entity e) 
+		m_Registry.view<IDComponent>().each([&](entt::entity e, auto& component)
 		{
 			Entity entity{ e, this };
 			DestroyEntity(entity);
@@ -332,6 +333,7 @@ namespace proton {
 
 			glm::mat4 transformMatrix = Math::GetTransform(transform.WorldPosition, glm::vec2{1.0f}, transform.Rotation);
 			
+			// TODO: optimize
 			for (const auto& column : sprite.m_Tilemap)
 				for (const auto& tile : column)
 				{
@@ -339,6 +341,16 @@ namespace proton {
 						spritesheet->GetTexture(), tile.Coords, rsc.Color);
 				}
 		}
+
+		// Render Circles
+		auto circlesView = m_Registry.view<TransformComponent, CircleRendererComponent>();
+		for (auto entity : circlesView)
+		{
+			auto [transform, circle] = circlesView.get<TransformComponent, CircleRendererComponent>(entity);
+
+			Renderer::DrawCircle(Math::GetTransform(transform.WorldPosition, transform.Scale, transform.Rotation), circle.Color, circle.Thickness, circle.Fade);
+		}
+
 
 		Renderer::EndScene();
 	}
@@ -370,9 +382,9 @@ namespace proton {
 	void Scene::CachePrimaryCameraPosition()
 	{
 	#ifdef PT_EDITOR
-		if (m_SceneState == SceneState::Stop || EditorLayer::GetCamera().m_UseInRuntime)
+		if (m_SceneState == SceneState::Stop || EditorLayer::GetCamera()->m_UseInRuntime)
 		{
-			m_PrimaryCameraPosition = EditorLayer::GetCamera().GetPosition();
+			m_PrimaryCameraPosition = EditorLayer::GetCamera()->GetPosition();
 			return;
 		}
 	#endif
@@ -391,9 +403,9 @@ namespace proton {
 	void Scene::CacheCursorWorldPosition()
 	{
 	#ifdef PT_EDITOR
-		uint32_t width = (uint32_t)EditorLayer::Get()->m_SceneViewportPanel.m_ViewportSize.x;
-		uint32_t height = (uint32_t)EditorLayer::Get()->m_SceneViewportPanel.m_ViewportSize.y;
-		const glm::vec2& mouse = EditorLayer::Get()->m_SceneViewportPanel.m_MousePos;
+		uint32_t width = (uint32_t)EditorLayer::GetSceneViewportPanel()->m_ViewportSize.x;
+		uint32_t height = (uint32_t)EditorLayer::GetSceneViewportPanel()->m_ViewportSize.y;
+		const glm::vec2& mouse = EditorLayer::GetSceneViewportPanel()->m_MousePos;
 	#else
 		Window& window = Application::Get().GetWindow();
 		uint32_t width = window.GetWidth();
@@ -409,8 +421,8 @@ namespace proton {
 	Camera& Scene::GetPrimaryCamera()
 	{
 	#ifdef PT_EDITOR
-		if (m_SceneState == SceneState::Stop || EditorLayer::GetCamera().m_UseInRuntime)
-			return EditorLayer::GetCamera().GetBaseCamera();
+		if (m_SceneState == SceneState::Stop || EditorLayer::GetCamera()->m_UseInRuntime)
+			return EditorLayer::GetCamera()->GetBaseCamera();
 	#endif
 		return m_PrimaryCamera ? *m_PrimaryCamera : m_DefaultCamera;
 	}
@@ -520,7 +532,7 @@ namespace proton {
 
 	uint32_t Scene::GetEntitiesCount() const
 	{
-		return (int32_t)m_Registry.alive();
+		return (int32_t)m_Registry.view<IDComponent>().size();
 	}
 
 	uint32_t Scene::GetScriptedEntitiesCount() const

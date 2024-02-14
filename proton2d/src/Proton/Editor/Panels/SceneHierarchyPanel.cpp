@@ -11,26 +11,10 @@ namespace proton {
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
 		ImGui::Begin("Hierarchy");
-		ImGui::Dummy({ 0.0f, 1.0f });
-
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow;
-
-		if (!m_SelectedEntity)
-			flags |= ImGuiTreeNodeFlags_Selected;
-
-		bool opened = ImGui::TreeNodeEx(m_ActiveScene->m_SceneName.c_str(), flags);
-
-		if (ImGui::IsItemClicked())
-			EditorLayer::SelectEntity({});
-
-		if (ImGui::IsItemClicked(1))
-			ImGui::OpenPopup("new_entity_root");
-
-		if (ImGui::BeginPopup("new_entity_root"))
+		if (!m_ActiveScene)
 		{
-			if (ImGui::MenuItem("New entity"))
-				m_ActiveScene->CreateEntity();
-			ImGui::EndPopup();
+			ImGui::End();
+			return;
 		}
 
 		if (ImGui::BeginDragDropTarget())
@@ -40,20 +24,41 @@ namespace proton {
 			ImGui::EndDragDropTarget();
 		}
 
-		if (opened)
+		// TODO: Change to Scene::GetEntitiesWithComponents
+		m_ActiveScene->m_Registry.view<RelationshipComponent>().each(
+			[&](entt::entity id, auto& relationship)
+			{
+				if (relationship.Parent == entt::null)
+					DrawEntityTreeNode(Entity{ id, m_ActiveScene });
+			});
+
+
+		static Entity treeNodeHovered; // persist state
+		if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(1))
 		{
-			m_ActiveScene->m_Registry.each([&](auto id)
-				{
-					Entity entity{ id, m_ActiveScene };
-					auto& relationship = entity.GetComponent<RelationshipComponent>();
-
-					if (relationship.Parent == entt::null)
-						DrawEntityTreeNode(entity);
-				});
-
-			ImGui::TreePop();
+			treeNodeHovered = m_TreeNodeHovered;
+			ImGui::OpenPopup("hierarchy_popup");
 		}
 
+		if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(0) && !m_TreeNodeHovered)
+			EditorLayer::SelectEntity({});
+
+		if (ImGui::BeginPopup("hierarchy_popup"))
+		{
+			if (!treeNodeHovered)
+			{
+				if (ImGui::MenuItem("Create Entity"))
+					EditorLayer::SelectEntity(m_ActiveScene->CreateEntity());
+			}
+			else
+			{
+				if (ImGui::MenuItem("Create Child Entity"))
+					EditorLayer::SelectEntity(treeNodeHovered.CreateChildEntity("Entity"));
+			}
+			ImGui::EndPopup();
+		}
+		
+		m_TreeNodeHovered = Entity{};
 		ImGui::End();
 	}
 
@@ -70,6 +75,7 @@ namespace proton {
 		if (relationship.First == entt::null)
 			flags |= ImGuiTreeNodeFlags_Leaf;
 
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, entity.GetComponent<TagComponent>().Tag.c_str());
 
 		if (ImGui::IsItemHovered() && ImGui::IsMouseDragging(0))
@@ -90,17 +96,11 @@ namespace proton {
 			ImGui::EndDragDropTarget();
 		}
 
+		if (ImGui::IsItemHovered())
+			m_TreeNodeHovered = entity;
+
 		if (ImGui::IsItemClicked())
 			EditorLayer::SelectEntity(entity);
-
-		if (ImGui::IsItemClicked(1))
-			ImGui::OpenPopup("new_entity_child");
-		if (ImGui::BeginPopup("new_entity_child"))
-		{
-			if (ImGui::MenuItem("New child entity"))
-				entity.AddChildEntity(m_ActiveScene->CreateEntity());
-			ImGui::EndPopup();
-		}
 
 		if (opened)
 		{

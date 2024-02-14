@@ -14,6 +14,7 @@ void MainLayer::OnCreate()
 {
 	SceneManager::Load("level_1");
 	SceneManager::Load("level_2");
+	SceneManager::Load("level_3");
 	SceneManager::SetActiveScene("level_1");
 }
 

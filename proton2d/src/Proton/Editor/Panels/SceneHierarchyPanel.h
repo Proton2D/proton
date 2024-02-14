@@ -13,6 +13,7 @@ namespace proton {
 		void DrawEntityTreeNode(Entity entity);
 
 	private:
+		Entity m_TreeNodeHovered;
 		Entity m_EntityDragTarget;
 	};
 

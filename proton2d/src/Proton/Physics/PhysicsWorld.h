@@ -59,7 +59,7 @@ namespace proton {
 		friend class SceneSerializer;
 		friend class Entity;
 
-		friend class ScenePanel;
+		friend class ToolbarPanel;
 		friend class InspectorPanel;
 	};
 

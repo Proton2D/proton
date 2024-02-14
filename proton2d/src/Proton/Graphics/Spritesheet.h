@@ -30,6 +30,7 @@ namespace proton {
 	private:
 		const TextureCoords& GetTextureCoords(uint32_t x, uint32_t y) const;
 
+	private:
 		std::vector<std::vector<TextureCoords>> m_TextureCoords;
 		Shared<Texture> m_Texture;
 
@@ -38,10 +39,11 @@ namespace proton {
 		glm::uvec2 m_TileCount = { 0, 0 }; // sheet size / tile size
 		glm::vec2 m_TileScale = { 0, 0 }; // 0.0f - 1.0f
 
-		friend class InspectorPanel;
 		friend class Sprite;
 		friend class ResizableSprite;
 		friend class Scene;
+
+		friend class InspectorPanel;
 	};
 
 }

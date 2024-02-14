@@ -4,17 +4,14 @@
 
 namespace proton {
 
-	class ScenePanel : public EditorPanel
+	class ToolbarPanel : public EditorPanel
 	{
 	public:
 		virtual void OnImGuiRender() override;
-		virtual void OnUpdate(float ts) override;
 
 	private:
-		void DrawSceneMemoryView();
+		void DrawSceneTabBar();
 
-	private:
-		float m_SavedSceneTextTimer = 0.0f;
 	};
 
 }

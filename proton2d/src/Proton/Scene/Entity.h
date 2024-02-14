@@ -41,6 +41,12 @@ namespace proton {
 			return m_Scene->m_Registry.all_of<TComponents...>(m_Handle);
 		}
 
+		template <typename... TComponents>
+		bool HasAnyComponent() const
+		{
+			return m_Scene->m_Registry.any_of<TComponents...>(m_Handle);
+		}
+
 		// Remove component from Entity
 		template <typename TComponent>
 		void RemoveComponent()

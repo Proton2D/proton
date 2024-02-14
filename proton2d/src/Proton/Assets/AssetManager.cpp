@@ -15,9 +15,9 @@ namespace proton {
 		}
 	}
 
-	Shared<Texture> AssetManager::LoadTexture(const std::string& filepath, bool autoLoad)
+	Shared<Texture> AssetManager::LoadTexture(const std::string& filepath)
 	{
-		auto texture = MakeShared<Texture>(filepath);
+		auto texture = MakeShared<Texture>("content/textures/" + filepath);
 		if (!texture->IsLoaded()) 
 		{
 			PT_CORE_ERROR_FUNCSIG("Couldn't load texture '{}'", filepath);

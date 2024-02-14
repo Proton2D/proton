@@ -29,6 +29,8 @@ namespace proton {
 		Texture(const std::string& path);
 		virtual ~Texture();
 
+		uint32_t GetOpenGL_ID() const { return m_Object_ID; }
+
 		uint32_t GetWidth() const { return m_Width;  }
 		uint32_t GetHeight() const { return m_Height; }
 		const std::string& GetPath() const { return m_Path; }
@@ -56,9 +58,9 @@ namespace proton {
 		uint32_t m_Object_ID = 0;
 		GLenum m_InternalFormat = 0;
 		GLenum m_DataFormat = 0;
-		TextureFilterMode m_FilterMode;
-		TextureWrapMode m_WrapModeX;
-		TextureWrapMode m_WrapModeY;
+		TextureFilterMode m_FilterMode = TextureFilterMode::Linear;
+		TextureWrapMode m_WrapModeX = TextureWrapMode::Repeat;
+		TextureWrapMode m_WrapModeY = TextureWrapMode::Repeat;
 
 		friend class SceneSerializer;
 	};

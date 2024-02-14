@@ -48,7 +48,8 @@ namespace proton {
 		EditorLayer* m_EditorLayer;
 	#endif
 
-		friend class MiscellaneousPanel;
+		friend class SettingsPanel;
+		friend class InfoPanel;
 	};
 
 }

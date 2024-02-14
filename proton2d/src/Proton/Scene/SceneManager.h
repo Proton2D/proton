@@ -44,7 +44,9 @@ namespace proton {
 		std::map<std::string, Scene*> m_Scenes;
 
 		friend class Application;
-		friend class ScenePanel;
+		friend class ToolbarPanel;
+
 		friend class EditorMenuBar;
+		friend class SceneViewportPanel;
 	};
 }

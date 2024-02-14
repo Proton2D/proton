@@ -18,6 +18,7 @@ namespace proton {
 		const Camera& GetBaseCamera() const { return m_Camera; }
 
 		const glm::vec3& GetPosition() const { return m_Position; }
+		void SetPosition(const glm::vec3& position);
 
 		void OnViewportResize(float w, float h);
 
@@ -32,7 +33,7 @@ namespace proton {
 		friend class Scene;
 		friend class SceneSerializer;
 		friend class SceneViewportPanel;
-		friend class MiscellaneousPanel;
+		friend class SettingsPanel;
 	};
 }
 #endif // PT_EDITOR

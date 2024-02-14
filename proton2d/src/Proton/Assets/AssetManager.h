@@ -13,7 +13,7 @@ namespace proton {
 		static void Init();
 
 		// Load texture and store using filepath as key.
-		static Shared<Texture> LoadTexture(const std::string& filepath, bool autoLoad = true);
+		static Shared<Texture> LoadTexture(const std::string& filepath);
 
 		// Get OpenGL Texture object pointer.
 		static Shared<Texture> GetTexture(const std::string& filepath);

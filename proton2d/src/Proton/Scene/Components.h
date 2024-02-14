@@ -27,7 +27,6 @@ namespace proton {
 	};
 
 	// Use Entity::SetWorldPosition to modify world position manually
-	// Rotation is in degrees
 	struct TransformComponent
 	{
 		glm::vec3 WorldPosition { 0.0f, 0.0f, 0.0f };
@@ -66,6 +65,13 @@ namespace proton {
 		glm::vec4 Color { 1.0f, 1.0f, 1.0f, 1.0f };
 	};
 
+	struct CircleRendererComponent
+	{
+		glm::vec4 Color{ 1.0f, 1.0f, 1.0f, 1.0f };
+		float Thickness = 1.0f;
+		float Fade = 0.005f;
+	};
+
 	class EntityScript; // forward declaration
 
 	struct ScriptComponent
@@ -90,9 +96,18 @@ namespace proton {
 		glm::vec2 Size { 1.0f, 1.0f };
 		glm::vec2 Offset { 0.0f, 0.0f };
 		PhysicsMaterial Material;
-		bool IsSensor = false;
-		b2Filter Filter;
 		PhysicsContactCallback ContactCallback;
+		b2Filter Filter;
+		bool IsSensor = false;
+	};
+
+	struct CircleColliderComponent
+	{
+		glm::vec2 Offset = { 0.0f, 0.0f };
+		float Radius = 1.0f;
+		PhysicsMaterial Material;
+		PhysicsContactCallback ContactCallback;
+		bool IsSensor = false;
 	};
 
 	struct SpriteAnimationComponent

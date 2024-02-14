@@ -2,6 +2,7 @@
 #ifdef PT_EDITOR
 #include "Proton/Editor/EditorMenuBar.h"
 #include "Proton/Editor/EditorLayer.h"
+#include "Proton/Editor/Panels/SceneViewportPanel.h"
 #include "Proton/Core/Application.h"
 #include "Proton/Scene/SceneManager.h"
 #include "Proton/Utils/Utils.h"
@@ -35,6 +36,13 @@ namespace proton {
 				if (ImGui::MenuItem("Exit"))
 					Application::Get().Exit();
 
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Editor"))
+			{
+				if (ImGui::MenuItem("Reset Camera"))
+					EditorLayer::GetCamera()->SetPosition({0.0f, 0.0f, 0.0f});
 				ImGui::EndMenu();
 			}
 

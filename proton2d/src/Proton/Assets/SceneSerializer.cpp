@@ -14,6 +14,13 @@
 
 namespace proton {
 
+	static const std::string s_TexturesPath = "content/textures/";
+
+	static std::string GetFilepathRelative(const std::string& parentDir, const std::string& fullFilepath)
+	{
+		return fullFilepath.substr(parentDir.size(), fullFilepath.size() - parentDir.size());;
+	}
+
 	static inline double round(float f)
 	{
 		return std::round((double)f * 100000) / 100000;
@@ -48,7 +55,7 @@ namespace proton {
 			jsonObj["PrimaryCameraEntity"] = id;
 		}
 
-		m_Scene->m_Registry.each([&](auto id)
+		m_Scene->m_Registry.view<IDComponent>().each([&](entt::entity id, auto& component)
 			{
 				Entity entity{ id, m_Scene };
 				auto& relationship = entity.GetComponent<RelationshipComponent>();
@@ -137,7 +144,7 @@ namespace proton {
 			if (sprite)
 			{
 				jsonObj["Sprite"] = {
-					{ "Texture",    sprite.GetTexture()->GetPath() },
+					{ "Texture", GetFilepathRelative(s_TexturesPath, sprite.GetTexture()->GetPath())},
 					{ "FilterMode", sprite.GetTexture()->GetFilterMode() },
 					{ "Flip", { sprite.m_MirrorFlipX, sprite.m_MirrorFlipY } }
 				};
@@ -168,7 +175,22 @@ namespace proton {
 			};
 
 			if (spritesheet)
-				jsonObj["ResizableSprite"]["Spritesheet"] = spritesheet->GetTexture()->GetPath();
+			{
+				jsonObj["ResizableSprite"]["Spritesheet"] = GetFilepathRelative(s_TexturesPath, spritesheet->GetTexture()->GetPath());
+			}
+		}
+
+		// Serialize CircleRendererComponent
+		if (entity.HasComponent<CircleRendererComponent>())
+		{
+			auto& component = entity.GetComponent<CircleRendererComponent>();
+			const auto& col = component.Color;
+
+			jsonObj["CircleRenderer"] = {
+				{ "Thickness", component.Thickness },
+				{ "Fade",      component.Fade },
+				{ "Color", { col.r, col.g, col.b, col.a } }
+			};
 		}
 
 		// Serialize RigidbodyComponent
@@ -188,6 +210,21 @@ namespace proton {
 			jsonObj["BoxCollider"] = {
 				{ "Size",               { collider.Size.x,   collider.Size.y } },
 				{ "Offset",             { collider.Offset.x, collider.Offset.y } },
+				{ "Friction",             collider.Material.Friction },
+				{ "Restitution",          collider.Material.Restitution },
+				{ "RestitutionThreshold", collider.Material.RestitutionThreshold },
+				{ "Density",              collider.Material.Density },
+				{ "IsSensor",             collider.IsSensor }
+			};
+		}
+
+		// Serialize CircleColliderComponent
+		if (entity.HasComponent<CircleColliderComponent>())
+		{
+			auto& collider = entity.GetComponent<CircleColliderComponent>();
+			jsonObj["CircleCollider"] = {
+				{ "Offset",             { collider.Offset.x, collider.Offset.y } },
+				{ "Radius",               collider.Radius },
 				{ "Friction",             collider.Material.Friction },
 				{ "Restitution",          collider.Material.Restitution },
 				{ "RestitutionThreshold", collider.Material.RestitutionThreshold },
@@ -367,6 +404,17 @@ namespace proton {
 			sprite.Generate();
 		}
 
+		// Deserialize CircleRendererComponent
+		if (jsonObj.contains("CircleRenderer"))
+		{
+			json& jsonData = jsonObj["CircleRenderer"];
+			auto& component = entity.AddComponent<CircleRendererComponent>();
+			component.Thickness = jsonData["Thickness"];
+			component.Fade = jsonData["Fade"];
+			auto& c = jsonData["Color"];
+			component.Color = { c[0], c[1], c[2], c[3] };
+		}
+
 		// Deserialize CameraComponent
 		if (jsonObj.contains("Camera"))
 		{
@@ -391,6 +439,22 @@ namespace proton {
 			collider.Material.RestitutionThreshold = boxCollider["RestitutionThreshold"];
 			collider.Material.Density = boxCollider["Density"];
 			collider.IsSensor = boxCollider["IsSensor"];
+		}
+
+		// Deserialize CircleColliderComponent
+		if (jsonObj.contains("CircleCollider"))
+		{
+			auto& collider = entity.AddComponent<CircleColliderComponent>();
+			json& circleCollider = jsonObj["CircleCollider"];
+			json& offset = circleCollider["Offset"];
+
+			collider.Offset = { offset[0], offset[1] };
+			collider.Radius = circleCollider["Radius"];
+			collider.Material.Friction = circleCollider["Friction"];
+			collider.Material.Restitution = circleCollider["Restitution"];
+			collider.Material.RestitutionThreshold = circleCollider["RestitutionThreshold"];
+			collider.Material.Density = circleCollider["Density"];
+			collider.IsSensor = circleCollider["IsSensor"];
 		}
 
 		// Deserialize RigidbodyComponent

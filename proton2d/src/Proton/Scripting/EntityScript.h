@@ -42,17 +42,17 @@ namespace proton {
 		// Supported variable types are listed inside ScriptFieldType enum.
 		virtual void OnRegisterFields() {}
 
+		// Draw your custom ImGui Editor interface here.
+		// The ImGui elements will be displayed within the script node in the Inspector Panel.
+		// IMPORTANT: Ensure that your ImGui code is enclosed within #ifdef PT_EDITOR preprocessor directives.
+		virtual void OnImGuiRender() {}
+
 		// Use glm::value_ptr for FloatX and IntX field types.
 		// Supported variable types are listed inside ScriptFieldType enum.
 		void RegisterField(ScriptFieldType type, const std::string& name, void* field, bool showInEditor = true) 
 		{
 			m_ScriptFields[name] = { type, field, showInEditor };
 		}
-
-		// Draw your custom Editor ImGui interface here.
-		// The ImGui elements will be displayed within the script node in the Inspector Panel.
-		// IMPORTANT: Ensure that your ImGui code is enclosed within #ifdef PT_EDITOR preprocessor directives.
-		virtual void OnImGuiRender() {}
 
 		
 	private:

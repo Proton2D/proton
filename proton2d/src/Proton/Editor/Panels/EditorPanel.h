@@ -12,6 +12,7 @@ namespace proton {
 	public:
 		virtual ~EditorPanel() = default;
 
+		virtual void OnCreate() {};
 		virtual void OnImGuiRender() = 0;
 		virtual void OnUpdate(float ts) {};
 		virtual void OnEvent(Event& event) {};

@@ -5,6 +5,7 @@
 #include <box2d/b2_body.h>
 #include <box2d/b2_fixture.h>
 #include <box2d/b2_polygon_shape.h>
+#include "box2d/b2_circle_shape.h"
 #include <box2d/b2_contact.h>
 
 namespace proton {
@@ -54,33 +55,60 @@ namespace proton {
 
 	void PhysicsWorld::AddFixtureToRuntimeBody(Entity entity, b2Body* body)
 	{
-		if (!entity.HasComponent<BoxColliderComponent>()) 
+		if (!entity.HasAnyComponent<BoxColliderComponent, CircleColliderComponent>())
 			return;
 
-		auto& bc = entity.GetComponent<BoxColliderComponent>();
 		auto& transform = entity.GetComponent<TransformComponent>();
 		auto& uuid = entity.GetComponent<IDComponent>().ID;
 
-		b2PolygonShape shape;
-		shape.SetAsBox(bc.Size.x * transform.Scale.x / 2.0f,
-			bc.Size.y * transform.Scale.y / 2.0f, { bc.Offset.x, bc.Offset.y }, 0);
-
 		b2FixtureDef fixtureDef;
+
+		// Store Entity in fixture data (for collisions and contacts)
 		m_FixtureUserData.push_back(MakeUnique<Entity>(entity.m_Handle, m_Scene));
 		fixtureDef.userData.pointer = (uintptr_t)(m_FixtureUserData.back().get());
-
-		fixtureDef.shape = &shape;
-		fixtureDef.friction = bc.Material.Friction;
-		fixtureDef.restitution = bc.Material.Restitution;
-		fixtureDef.restitutionThreshold = bc.Material.RestitutionThreshold;
-		fixtureDef.density = bc.Material.Density;
-		fixtureDef.isSensor = bc.IsSensor;
-		fixtureDef.filter = bc.Filter;
 
 		if (!body)
 			body = GetRuntimeBody(entity.GetUUID());
 
-		body->CreateFixture(&fixtureDef);
+		// BoxColliderComponent
+		if (entity.HasComponent<BoxColliderComponent>())
+		{
+			auto& bc = entity.GetComponent<BoxColliderComponent>();
+
+			b2PolygonShape shape;
+			shape.SetAsBox(bc.Size.x * transform.Scale.x / 2.0f,
+				bc.Size.y * transform.Scale.y / 2.0f, { bc.Offset.x, bc.Offset.y }, 0);
+
+			fixtureDef.shape = &shape;
+			fixtureDef.isSensor = bc.IsSensor;
+			fixtureDef.filter = bc.Filter;
+
+			fixtureDef.friction = bc.Material.Friction;
+			fixtureDef.restitution = bc.Material.Restitution;
+			fixtureDef.restitutionThreshold = bc.Material.RestitutionThreshold;
+			fixtureDef.density = bc.Material.Density;
+
+			body->CreateFixture(&fixtureDef);
+		}
+
+		// CircleColliderComponent
+		if (entity.HasComponent<CircleColliderComponent>())
+		{
+			auto& cc = entity.GetComponent<CircleColliderComponent>();
+
+			b2CircleShape shape;
+			shape.m_p.Set(cc.Offset.x, cc.Offset.y);
+			shape.m_radius = transform.Scale.x / 2.0f * cc.Radius;
+			fixtureDef.shape = &shape;
+			fixtureDef.isSensor = cc.IsSensor;
+
+			fixtureDef.friction = cc.Material.Friction;
+			fixtureDef.restitution = cc.Material.Restitution;
+			fixtureDef.restitutionThreshold = cc.Material.RestitutionThreshold;
+			fixtureDef.density = cc.Material.Density;
+
+			body->CreateFixture(&fixtureDef);
+		}
 	}
 
 	void PhysicsWorld::BuildWorld()
@@ -133,15 +161,13 @@ namespace proton {
 				if (entity.HasComponent<RigidbodyComponent>())
 				{
 					CreateRuntimeBody(entity);
+					continue;
 				}
-				else if (entity.HasComponent<BoxColliderComponent>())
+				auto& rc = entity.GetComponent<RelationshipComponent>();
+				if (rc.Parent != entt::null)
 				{
-					auto& rc = entity.GetComponent<RelationshipComponent>();
-					if (rc.Parent != entt::null)
-					{
-						Entity parent{ rc.Parent, m_Scene };
-						AddFixtureToRuntimeBody(entity, GetRuntimeBody(parent.GetUUID()));
-					}
+					Entity parent{ rc.Parent, m_Scene };
+					AddFixtureToRuntimeBody(entity, GetRuntimeBody(parent.GetUUID()));
 				}
 			}
 			m_EntitiesToInitialize.clear();
@@ -170,25 +196,36 @@ namespace proton {
 	Entity* entityA = (Entity*)(contact->GetFixtureA()->GetUserData().pointer); \
 	Entity* entityB = (Entity*)(contact->GetFixtureB()->GetUserData().pointer); \
 	if (!entityA->IsValid() || !entityB->IsValid()) return; \
-	auto& bcA = entityA->GetComponent<BoxColliderComponent>(); \
-	auto& bcB = entityB->GetComponent<BoxColliderComponent>(); \
-	if (bcA.ContactCallback.callback_func) \
-		bcA.ContactCallback.callback_func(PhysicsContact{ entityB, contact }, __VA_ARGS__); \
-	if (bcB.ContactCallback.callback_func) \
-		bcB.ContactCallback.callback_func(PhysicsContact{ entityA, contact }, __VA_ARGS__); \
+	PhysicsContactCallback* callbackA = nullptr; \
+	PhysicsContactCallback* callbackB = nullptr; \
+\
+	if (entityA->HasComponent<BoxColliderComponent>()) \
+		callbackA = &entityA->GetComponent<BoxColliderComponent>().ContactCallback; \
+	if (entityB->HasComponent<BoxColliderComponent>()) \
+		callbackB = &entityB->GetComponent<BoxColliderComponent>().ContactCallback; \
+\
+	if (entityA->HasComponent<CircleColliderComponent>()) \
+		callbackA = &entityA->GetComponent<CircleColliderComponent>().ContactCallback; \
+	if (entityB->HasComponent<CircleColliderComponent>()) \
+		callbackB = &entityB->GetComponent<CircleColliderComponent>().ContactCallback; \
+\
+	if (callbackA && callbackA->callback_func) \
+		callbackA->callback_func(PhysicsContact{ entityB, contact }, __VA_ARGS__); \
+	if (callbackB && callbackB->callback_func) \
+		callbackB->callback_func(PhysicsContact{ entityA, contact }, __VA_ARGS__); \
 
 	void PhysicsContactListener::BeginContact(b2Contact* contact)
 	{
 		CALL_CONTACT_CALLBACK_FUNCTION(OnBegin);
-		bcA.ContactCallback.ContactCount++;
-		bcB.ContactCallback.ContactCount++;
+		callbackA->ContactCount++;
+		callbackB->ContactCount++;
 	}
 
 	void PhysicsContactListener::EndContact(b2Contact* contact)
 	{
 		CALL_CONTACT_CALLBACK_FUNCTION(OnEnd);
-		bcA.ContactCallback.ContactCount--;
-		bcB.ContactCallback.ContactCount--;
+		callbackA->ContactCount--;
+		callbackB->ContactCount--;
 	}
 
 	void PhysicsContactListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)

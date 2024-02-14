@@ -14,13 +14,11 @@
 
 #ifdef PROTON_PLATFORM_WINDOWS
 	#include "Proton/Platform/Windows/WindowsWindow.h"
-	#include "Proton/Platform/Windows/WindowsInput.h"
 #endif
 
 namespace proton {
 
 	Application* Application::s_Instance = nullptr;
-	Input* Input::s_Instance = nullptr;
 
 	Application::Application()
 	{
@@ -29,17 +27,11 @@ namespace proton {
 
 	#ifdef PROTON_PLATFORM_WINDOWS
 		m_Window = MakeUnique<WindowsWindow>(m_AppConfig.WindowTitle, m_AppConfig.WindowWidth, m_AppConfig.WindowHeight);
-		Input::s_Instance = new WindowsInput();
 	#endif
 
 		m_Window->SetEventCallback(PT_BIND_FUNCTION(Application::OnEvent));
 		m_Window->SetFullscreen(m_AppConfig.Fullscreen);
 		m_Window->SetVSync(m_AppConfig.VSync);
-
-	#ifdef PT_EDITOR
-		m_EditorLayer = new EditorLayer();
-		PushOverlay(m_EditorLayer);
-	#endif
 	}
 
 	Application::~Application()
@@ -61,9 +53,15 @@ namespace proton {
 		}
 
 		AssetManager::Init();
+		Renderer::Init();
+
+	#ifdef PT_EDITOR
+		m_EditorLayer = new EditorLayer();
+		PushOverlay(m_EditorLayer);
+	#endif
+
 		SceneManager::Init();
 		PrefabManager::Init();
-		Renderer::Init();
 
 		PROFILE_BEGIN_SESSION("Proton-Runtime");
 
