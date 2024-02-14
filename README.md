@@ -15,10 +15,8 @@ The main features of the engine are:
 - Resizable Sprites using the 9-scaling method,
 - Entity Prefabs (will be reworked).
 
-<details>
-<summary><b>Game Editor Preview (expand)</b></summary>
-<img src="https://i.imgur.com/jJWpWKr.png" alt="Game editor"></img>
-</details>
+<b>Game Editor Preview</b>
+<img src="https://i.imgur.com/xDewNto.png" alt="Game editor"></img>
 
 ## Getting Started
 At the moment, the Proton engine is compatible with Windows only. Linux support is planned to be added in the near future.
@@ -92,10 +90,11 @@ The Proton2D game engine editor consists of several panels, each having it's own
 | ----------- | ---------- |
 | <b>Scene Hierarchy</b> |  Manages the scene's entity hierarchy structure. Right-click to add a new entity at the scene root, or click on an entity to add a child. Entities can be reorganized through drag-and-drop.  |
 | <b>Inspector</b> | Panel where you can edit entities by modifing their component values. |
-| <b>Scene</b> | Scene simulation control buttons: Play, Pause, Resume, and Stop. The view of scenes loaded in memory. This will be changed to scene tabs above the editor in the future. |
+| <b>Toolbar</b> | Scene simulation control buttons: Play, Pause, Resume, and Stop. Loaded scenes tab bar. |
 | <b>Viewport</b> | Scene viewport that displays a rendered game view. You can move the editor camera by holding the right mouse button, and select and move entities using the left mouse button. Camera zoom can be changed by using the scroll wheel. |
-| <b>Prefab</b> | List of prefabs that can be spawned or deleted. |
-| <b>Misc</b> | General application settings and statistics. |
+| <b>Content Browser</b> | Browser for game "content" folder which stores all game assets. Prefabs and Scenes have implemented drag and drop functionality. |
+| <b>Settings</b> | General application and editor settings. |
+| <b>Info</b> | Frame time, FPS, Renderer stats. |
 
 The editor is integrated into the game runtime and not built as a separate application, because the engine does not have external language scripting nor hot reloading implemented yet.
 
