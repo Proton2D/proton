@@ -17,20 +17,24 @@ namespace proton {
 			return;
 		}
 
+		ImGui::Dummy(ImGui::GetWindowSize());
+		ImGui::SetCursorPos({ 0, 0 });
 		if (ImGui::BeginDragDropTarget())
 		{
-			if (ImGui::AcceptDragDropPayload("Entity"))
-				m_EntityDragTarget.PopHierarchy();
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY"))
+			{
+				Entity dragTarget = *(Entity*)payload->Data;
+				dragTarget.PopHierarchy();
+			}
 			ImGui::EndDragDropTarget();
 		}
+		ImGui::Dummy({ 0, 2 });
 
-		// TODO: Change to Scene::GetEntitiesWithComponents
-		m_ActiveScene->m_Registry.view<RelationshipComponent>().each(
-			[&](entt::entity id, auto& relationship)
-			{
-				if (relationship.Parent == entt::null)
-					DrawEntityTreeNode(Entity{ id, m_ActiveScene });
-			});
+		m_ActiveScene->m_Registry.view<RelationshipComponent>().each([&](entt::entity id, auto& relationship)
+		{
+			if (relationship.Parent == entt::null)
+				DrawEntityTreeNode(Entity{ id, m_ActiveScene });
+		});
 
 
 		static Entity treeNodeHovered; // persist state
@@ -57,7 +61,7 @@ namespace proton {
 			}
 			ImGui::EndPopup();
 		}
-		
+
 		m_TreeNodeHovered = Entity{};
 		ImGui::End();
 	}
@@ -80,18 +84,23 @@ namespace proton {
 
 		if (ImGui::IsItemHovered() && ImGui::IsMouseDragging(0))
 		{
-			m_EntityDragTarget = entity;
-			ImGui::BeginDragDropSource();
-			ImGui::SetDragDropPayload("Entity", (void*)&m_EntityDragTarget, sizeof(Entity));
-			ImGui::EndDragDropSource();
+			if (ImGui::BeginDragDropSource())
+			{
+				ImGui::SetDragDropPayload("SCENE_HIERARCHY_ENTITY", (void*)&entity, sizeof(Entity));
+				ImGui::EndDragDropSource();
+			}
 		}
 
 		if (ImGui::BeginDragDropTarget())
 		{
-			if (m_EntityDragTarget && !m_EntityDragTarget.IsParentOf(entity) && ImGui::AcceptDragDropPayload("Entity"))
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY"))
 			{
-				m_EntityDragTarget.PopHierarchy();
-				entity.AddChildEntity(m_EntityDragTarget);
+				Entity dragTarget = *(Entity*)payload->Data;
+				if (!dragTarget.IsParentOf(entity))
+				{
+					dragTarget.PopHierarchy();
+					entity.AddChildEntity(dragTarget);
+				}
 			}
 			ImGui::EndDragDropTarget();
 		}
