@@ -32,10 +32,10 @@ namespace proton { namespace Utils {
 				in.close();
 			}
 			else
-				PT_CORE_ERROR_FUNCSIG("Could not read from file '{}'", filepath);
+				PT_CORE_ERROR("Could not read from file '{}'", filepath);
 		}
 		else
-			PT_CORE_ERROR_FUNCSIG("Could not open file '{}'", filepath);
+			PT_CORE_ERROR("Could not open file '{}'", filepath);
 
 		return result;
 	}

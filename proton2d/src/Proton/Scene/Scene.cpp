@@ -565,7 +565,7 @@ namespace proton {
 	{
 		if (!entity || !entity.HasComponent<CameraComponent>())
 		{
-			PT_CORE_ERROR_FUNCSIG("Entity does not have CameraComponent!");
+			PT_CORE_ERROR("Entity does not have CameraComponent!");
 			return;
 		}
 

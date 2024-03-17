@@ -75,7 +75,7 @@ namespace proton {
 		{
 			if (!LoadPrefab(prefabPath))
 			{
-				PT_CORE_ERROR_FUNCSIG("Prefab '{}' not found", prefabPath);
+				PT_CORE_ERROR("Prefab '{}' not found", prefabPath);
 				return Entity();
 			}
 		}

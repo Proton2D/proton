@@ -48,7 +48,7 @@ namespace proton {
 	{
 		if (m_IsRunning)
 		{
-			PT_CORE_ERROR_FUNCSIG("Application is already running!");
+			PT_CORE_ERROR("Application is already running!");
 			return;
 		}
 
@@ -65,7 +65,7 @@ namespace proton {
 
 		if (!m_Project.LoadProjectSettings())
 		{
-			PT_CORE_ERROR_FUNCSIG("Project settings loading failed!");
+			PT_CORE_ERROR("Project settings loading failed!");
 			return;
 		}
 

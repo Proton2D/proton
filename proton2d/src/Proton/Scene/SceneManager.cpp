@@ -33,11 +33,11 @@ namespace proton {
 	{
 		if (!IsLoaded(scenePath) && !Load(scenePath))
 		{
-			PT_CORE_ERROR_FUNCSIG("Scene '{}' not loaded!", scenePath);
+			PT_CORE_ERROR("Scene '{}' not loaded!", scenePath);
 			return nullptr;
 		}
 
-		PT_CORE_INFO_FUNCSIG("scene='{}'", scenePath);
+		PT_CORE_INFO("scene='{}'", scenePath);
 		Scene* targetScene = GetScene(scenePath);
 		s_Instance->m_ActiveScene = targetScene;
 		Renderer::SetClearColor(s_Instance->m_ActiveScene->m_ClearColor);
@@ -50,14 +50,14 @@ namespace proton {
 
 	Scene* SceneManager::Load(const std::string& scenePath)
 	{
-		PT_CORE_INFO_FUNCSIG("file='{}.scene.json'", scenePath);
+		PT_CORE_INFO("file='{}.scene.json'", scenePath);
 		Shared<Scene> scene = MakeShared<Scene>(std::string(), scenePath);
 		SceneSerializer serializer(scene.get());
 
 		std::string filepath = "content/scenes/" + scenePath + ".scene.json";
 		if (!serializer.Deserialize(filepath))
 		{
-			PT_CORE_ERROR_FUNCSIG("Loading '{}' failed!", filepath);
+			PT_CORE_ERROR("Loading '{}' failed!", filepath);
 			return nullptr;
 		}
 		s_Instance->m_Scenes[scenePath] = scene;
@@ -69,12 +69,12 @@ namespace proton {
 		Scene* scene = GetScene(scenePath);
 		if (!scene)
 		{
-			PT_CORE_ERROR_FUNCSIG("scene='{}' not found", scenePath);
+			PT_CORE_ERROR("scene='{}' not found", scenePath);
 			return;
 		}
 
 		std::string name = scenePath;
-		PT_CORE_INFO_FUNCSIG("scene='{}'", name);
+		PT_CORE_INFO("scene='{}'", name);
 
 		bool isActive = scene == s_Instance->m_ActiveScene;
 		s_Instance->m_Scenes.erase(scenePath);
@@ -104,7 +104,7 @@ namespace proton {
 	{
 		if (!IsLoaded(scenePath))
 		{
-			PT_CORE_ERROR_FUNCSIG("Scene '{}' not loaded!", scenePath);
+			PT_CORE_ERROR("Scene '{}' not loaded!", scenePath);
 			return;
 		}
 

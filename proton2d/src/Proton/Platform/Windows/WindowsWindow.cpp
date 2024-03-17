@@ -29,8 +29,8 @@ namespace proton {
 		m_PreviousWidth = width;
 		m_PreviousHeight = height;
 
-		PT_CORE_INFO("*********************************************************");
-		PT_CORE_INFO("Creating window '{}' ({}x{})", title, width, height);
+		_PT_CORE_INFO("*********************************************************");
+		_PT_CORE_INFO("Creating window '{}' ({}x{})", title, width, height);
 
 		if (s_GLFWWindowCount == 0)
 		{
@@ -47,9 +47,9 @@ namespace proton {
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
 
-		PT_CORE_INFO("OpenGL version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
-		PT_CORE_INFO("Renderer: {}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
-		PT_CORE_INFO("*********************************************************");
+		_PT_CORE_INFO("OpenGL version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+		_PT_CORE_INFO("Renderer: {}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+		_PT_CORE_INFO("*********************************************************");
 
 		// Set window icon
 		int icon_width, icon_height, icon_channels;
@@ -166,7 +166,7 @@ namespace proton {
 		if (s_GLFWWindowCount == 0)
 			glfwTerminate();
 		
-		PT_CORE_INFO_FUNCSIG("GLFW Window terminated.");
+		PT_CORE_INFO("GLFW Window terminated.");
 	}
 
 	void WindowsWindow::OnUpdate()

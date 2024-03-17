@@ -14,6 +14,8 @@
 #include <spdlog/fmt/ostr.h>
 #pragma warning(pop)
 
+#define PT_ENABLE_FUNC_SIGNATURE_LOGGING 1
+
 namespace proton {
 
 	class Logger
@@ -55,27 +57,43 @@ namespace proton::LoggerUtils {
 }
 
 // Core log macros
-#define PT_CORE_TRACE(...)    ::proton::Logger::GetCoreLogger()->trace(__VA_ARGS__)
-#define PT_CORE_INFO(...)     ::proton::Logger::GetCoreLogger()->info(__VA_ARGS__)
-#define PT_CORE_WARN(...)     ::proton::Logger::GetCoreLogger()->warn(__VA_ARGS__)
-#define PT_CORE_ERROR(...)    ::proton::Logger::GetCoreLogger()->error(__VA_ARGS__)
-#define PT_CORE_CRITICAL(...) ::proton::Logger::GetCoreLogger()->critical(__VA_ARGS__)
+#define _PT_CORE_TRACE(...)    ::proton::Logger::GetCoreLogger()->trace(__VA_ARGS__)
+#define _PT_CORE_INFO(...)     ::proton::Logger::GetCoreLogger()->info(__VA_ARGS__)
+#define _PT_CORE_WARN(...)     ::proton::Logger::GetCoreLogger()->warn(__VA_ARGS__)
+#define _PT_CORE_ERROR(...)    ::proton::Logger::GetCoreLogger()->error(__VA_ARGS__)
+#define _PT_CORE_CRITICAL(...) ::proton::Logger::GetCoreLogger()->critical(__VA_ARGS__)
 
-#define PT_CORE_TRACE_FUNCSIG(...)    PT_CORE_TRACE(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
-#define PT_CORE_INFO_FUNCSIG(...)     PT_CORE_INFO(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
-#define PT_CORE_WARN_FUNCSIG(...)     PT_CORE_WARN(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
-#define PT_CORE_ERROR_FUNCSIG(...)    PT_CORE_ERROR(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
-#define PT_CORE_CRITICAL_FUNCSIG(...) PT_CORE_CRITICAL(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+#if PT_ENABLE_FUNC_SIGNATURE_LOGGING
+	#define PT_CORE_TRACE(...)    _PT_CORE_TRACE(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+	#define PT_CORE_INFO(...)     _PT_CORE_INFO(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+	#define PT_CORE_WARN(...)     _PT_CORE_WARN(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+	#define PT_CORE_ERROR(...)    _PT_CORE_ERROR(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+	#define PT_CORE_CRITICAL(...) _PT_CORE_CRITICAL(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+#else
+	#define PT_CORE_TRACE(...)    _PT_CORE_TRACE(__VA_ARGS__)
+	#define PT_CORE_INFO(...)     _PT_CORE_INFO(__VA_ARGS__)
+	#define PT_CORE_WARN(...)     _PT_CORE_WARN(__VA_ARGS__)
+	#define PT_CORE_ERROR(...)    _PT_CORE_ERROR(__VA_ARGS__)
+	#define PT_CORE_CRITICAL(...) _PT_CORE_CRITICAL(__VA_ARGS__)
+#endif
 
 // Client log macros
-#define PT_TRACE(...)         ::proton::Logger::GetClientLogger()->trace(__VA_ARGS__)
-#define PT_INFO(...)          ::proton::Logger::GetClientLogger()->info(__VA_ARGS__)
-#define PT_WARN(...)          ::proton::Logger::GetClientLogger()->warn(__VA_ARGS__)
-#define PT_ERROR(...)         ::proton::Logger::GetClientLogger()->error(__VA_ARGS__)
-#define PT_CRITICAL(...)      ::proton::Logger::GetClientLogger()->critical(__VA_ARGS__)
+#define _PT_TRACE(...)         ::proton::Logger::GetClientLogger()->trace(__VA_ARGS__)
+#define _PT_INFO(...)          ::proton::Logger::GetClientLogger()->info(__VA_ARGS__)
+#define _PT_WARN(...)          ::proton::Logger::GetClientLogger()->warn(__VA_ARGS__)
+#define _PT_ERROR(...)         ::proton::Logger::GetClientLogger()->error(__VA_ARGS__)
+#define _PT_CRITICAL(...)      ::proton::Logger::GetClientLogger()->critical(__VA_ARGS__)
 
-#define PT_TRACE_FUNCSIG(...)    PT_TRACE(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
-#define PT_INFO_FUNCSIG(...)     PT_INFO(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
-#define PT_WARN_FUNCSIG(...)     PT_WARN(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
-#define PT_ERROR_FUNCSIG(...)    PT_ERROR(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
-#define PT_CRITICAL_FUNCSIG(...) PT_CRITICAL(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+#if PT_ENABLE_FUNC_SIGNATURE_LOGGING
+	#define PT_TRACE(...)         _PT_TRACE(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+	#define PT_INFO(...)          _PT_INFO(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+	#define PT_WARN(...)          _PT_WARN(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+	#define PT_ERROR(...)         _PT_ERROR(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+	#define PT_CRITICAL(...)      _PT_CRITICAL(proton::LoggerUtils::FormatFuncSignature(__FUNCSIG__) + __VA_ARGS__)
+#else
+	#define PT_TRACE(...)         _PT_TRACE(__VA_ARGS__)
+	#define PT_INFO(...)          _PT_INFO(__VA_ARGS__)
+	#define PT_WARN(...)          _PT_WARN(__VA_ARGS__)
+	#define PT_ERROR(...)         _PT_ERROR(__VA_ARGS__)
+	#define PT_CRITICAL(...)      _PT_CRITICAL(__VA_ARGS__)
+#endif

@@ -13,7 +13,7 @@ namespace proton {
 	{
 		if (m_ScriptRegistry.find(className) == m_ScriptRegistry.end())
 		{
-			PT_CORE_ERROR_FUNCSIG("Script '{}' not found!", className);
+			PT_CORE_ERROR("Script '{}' not found!", className);
 			return nullptr;
 		}
 		AddScriptFunction& addScriptFunction = m_ScriptRegistry.at(className);
@@ -25,7 +25,7 @@ namespace proton {
 	{
 		if (m_ScriptRegistry.find(className) != m_ScriptRegistry.end())
 		{
-			PT_CORE_ERROR_FUNCSIG("Script '{}' already exists", className);
+			PT_CORE_ERROR("Script '{}' already exists", className);
 			return false;
 		}
 		m_ScriptRegistry[className] = addFunction;

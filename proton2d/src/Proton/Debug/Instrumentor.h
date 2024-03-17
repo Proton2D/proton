@@ -133,7 +133,7 @@ namespace proton {
     #define PROFILE_BEGIN_SESSION(name) ::proton::Instrumentor::Get().BeginSession(name, name ".json")
     #define PROFILE_END_SESSION() ::proton::Instrumentor::Get().EndSession()
     #define PROFILE_SCOPE(name) ::proton::InstrumentationTimer timer##__LINE(name)
-    #define PROFILE_FUNCTION() PROFILE_SCOPE(__FUNCSIG__)
+    #define PROFILE_FUNCTION() PROFILE_SCOPE(___)
 #else
     #define PROFILE_BEGIN_SESSION(name) 
     #define PROFILE_END_SESSION() 

@@ -59,7 +59,7 @@ namespace proton {
 			if (std::is_base_of<CameraComponent, TComponent>::value
 				&& m_Scene->m_PrimaryCameraEntity == *this)
 			{
-				PT_CORE_WARN_FUNCSIG("Scene Primary Camera has been removed!");
+				PT_CORE_WARN("Scene Primary Camera has been removed!");
 				m_Scene->m_PrimaryCameraEntity = entt::null;
 				m_Scene->m_PrimaryCamera = nullptr;
 			}
