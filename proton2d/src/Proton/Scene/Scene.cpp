@@ -17,18 +17,133 @@
 
 namespace proton {
 
-	Scene::Scene(const std::string& name)
-		: m_SceneName(name), m_PhysicsWorld(MakeUnique<PhysicsWorld>(this))
+	Scene::Scene(const std::string& name, const std::string& filepath)
+		: m_SceneName(name), m_SceneFilepath(filepath),
+		m_PhysicsWorld(MakeUnique<PhysicsWorld>(this))
 	{
 	}
 
-	Scene::~Scene()
+	template<typename... TComponent>
+	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
 	{
-		DestroyAll();
+		([&]()
+		{
+			auto view = src.view<TComponent>();
+			for (auto srcEntity : view)
+			{
+				entt::entity dstEntity = enttMap.at(src.get<IDComponent>(srcEntity).ID);
+				auto& srcComponent = src.get<TComponent>(srcEntity);
+				dst.emplace_or_replace<TComponent>(dstEntity, srcComponent);
+			}
+		}(), ...);
+	}
+
+	template<typename... TComponent>
+	static void CopyComponent(ComponentGroup<TComponent...>, entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
+	{
+		CopyComponent<TComponent...>(dst, src, enttMap);
+	}
+
+	template<typename... TComponent>
+	static void CopyComponentIfExists(Entity dst, Entity src)
+	{
+		([&]()
+		{
+			if (src.HasComponent<TComponent>())
+				dst.AddOrReplaceComponent<TComponent>(src.GetComponent<TComponent>());
+		}(), ...);
+	}
+
+	template<typename... TComponent>
+	static void CopyComponentIfExists(ComponentGroup<TComponent...>, Entity dst, Entity src)
+	{
+		CopyComponentIfExists<TComponent...>(dst, src);
+	}
+
+	Shared<Scene> Scene::CreateSceneCopy()
+	{
+		Shared<Scene> newScene = MakeShared<Scene>();
+		newScene->m_SceneName = m_SceneName;
+		newScene->m_SceneFilepath = m_SceneFilepath;
+		newScene->m_ClearColor = m_ClearColor;
+		newScene->m_EnablePhysics = m_EnablePhysics;
+
+		auto& dstSceneRegistry = newScene->m_Registry;
+		std::unordered_map<UUID, entt::entity> enttMap;
+
+		// Create entities in new scene
+		for (entt::entity srcEntity : m_Registry.view<IDComponent>())
+		{
+			UUID uuid = m_Registry.get<IDComponent>(srcEntity).ID;
+			const auto& name = m_Registry.get<TagComponent>(srcEntity).Tag;
+			Entity newEntity = newScene->CreateEntityWithUUID(uuid, name, false);
+			enttMap[uuid] = (entt::entity)newEntity;
+		}
+
+		// Set RelationshipComponent in new registry
+		for (entt::entity srcEntity : m_Registry.view<RelationshipComponent>())
+		{
+			entt::entity dstEntity = enttMap.at(m_Registry.get<IDComponent>(srcEntity).ID);
+			auto& srcComponent = m_Registry.get<RelationshipComponent>(srcEntity);
+			auto& dstComponent = dstSceneRegistry.get<RelationshipComponent>(dstEntity);
+			dstComponent.ChildrenCount = srcComponent.ChildrenCount;
+
+			// Set handles to destination registry entities
+			if (srcComponent.First != entt::null)
+				dstComponent.First = enttMap.at(m_Registry.get<IDComponent>(srcComponent.First).ID);
+			
+			if (srcComponent.Prev != entt::null)
+				dstComponent.Prev = enttMap.at(m_Registry.get<IDComponent>(srcComponent.Prev).ID);
+			
+			if (srcComponent.Next != entt::null)
+				dstComponent.Next = enttMap.at(m_Registry.get<IDComponent>(srcComponent.Next).ID);
+			
+			if (srcComponent.Parent != entt::null)
+				dstComponent.Parent = enttMap.at(m_Registry.get<IDComponent>(srcComponent.Parent).ID);
+		}
+
+		// Update new scene root
+		for (Entity entity : m_Root)
+		{
+			newScene->m_Root.push_back(Entity(enttMap.at(entity.GetUUID()), newScene.get()));
+		}
+
+		// Copy components (except IDComponent, TagComponent, RelationshipComponent and ScriptComponent)
+		CopyComponent(AllComponents{}, dstSceneRegistry, m_Registry, enttMap);
+
+		// Create EntityScript instances
+		for (entt::entity srcEntity : m_Registry.view<ScriptComponent>())
+		{
+			entt::entity dstEntity = enttMap.at(m_Registry.get<IDComponent>(srcEntity).ID);
+			dstSceneRegistry.emplace<ScriptComponent>(dstEntity);
+			
+			// Create script copy
+			for (auto& it : m_Registry.get<ScriptComponent>(srcEntity).Scripts)
+			{
+				EntityScript* script = ScriptFactory::Get().AddScriptToEntity(Entity(dstEntity, newScene.get()), it.first);
+				// Copy field values
+				for (auto& [fieldName, fieldData] : it.second->m_ScriptFields)
+				{
+					script->SetFieldValueData(fieldName, fieldData.InstanceFieldValue);
+				}
+			}
+		}
+
+		// Set primary camera for new scene
+		if (m_PrimaryCameraEntity != entt::null)
+		{
+			Entity dstPrimaryCameraEntity = newScene->FindByID(Entity(m_PrimaryCameraEntity, this).GetUUID());
+			newScene->SetPrimaryCameraEntity(dstPrimaryCameraEntity);
+		}
+
+		return newScene;
 	}
 
 	void Scene::BeginPlay()
 	{	
+	#ifdef PT_EDITOR
+		EditorLayer::Get()->OnBeginSceneSimulation(this);
+	#endif
 		if (m_SceneState == SceneState::Play || m_SceneState == SceneState::Paused)
 			return; 
 
@@ -46,12 +161,28 @@ namespace proton {
 		m_SceneState = pause ? SceneState::Paused : SceneState::Play;
 	}
 
+	void Scene::Stop()
+	{
+		if (m_PhysicsWorld->IsInitialized())
+			m_PhysicsWorld->DestroyWorld();
+		m_SceneState = SceneState::Stop;
+
+	#ifdef PT_EDITOR
+		EditorLayer::Get()->OnStopSceneSimulation(this);
+	#endif
+	}
+
+	SceneState Scene::GetSceneState() const
+	{
+		return m_SceneState;
+	}
+
 	Entity Scene::CreateEntity(const std::string& name)
 	{
 		return CreateEntityWithUUID(UUID(), name);
 	}
 
-	Entity Scene::CreateEntityWithUUID(UUID id, const std::string& name)
+	Entity Scene::CreateEntityWithUUID(UUID id, const std::string& name, bool addToSceneRoot)
 	{
 		Entity entity = Entity{ m_Registry.create(), this };
 		entity.AddComponent<IDComponent>().ID = id;
@@ -59,7 +190,10 @@ namespace proton {
 		entity.AddComponent<TransformComponent>();
 		entity.AddComponent<RelationshipComponent>();
 		m_EntityMap[id] = entity;
-		m_Root.push_back(entity);
+		if (addToSceneRoot)
+		{
+			m_Root.push_back(entity);
+		}
 		return entity;
 	}
 
@@ -543,11 +677,6 @@ namespace proton {
 	const std::string& Scene::GetFilepath() const
 	{
 		return m_SceneFilepath;
-	}
-
-	SceneState Scene::GetSceneState() const
-	{
-		return m_SceneState;
 	}
 
 	bool Scene::IsPhysicsEnabled() const

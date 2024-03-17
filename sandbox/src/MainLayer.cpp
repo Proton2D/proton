@@ -12,10 +12,6 @@ using namespace proton;
 
 void MainLayer::OnCreate()
 {
-	SceneManager::Load("level_1");
-	SceneManager::Load("level_2");
-	SceneManager::Load("level_3");
-	SceneManager::SetActiveScene("level_1");
 }
 
 void MainLayer::OnUpdate(float ts)
@@ -41,9 +37,8 @@ void MainLayer::SpawnRandomBox(const glm::vec2& position)
 	Scene* scene = SceneManager::GetActiveScene();
 	Entity entity = scene->CreateEntity("Random Box");
 
-	auto& transform = entity.GetComponent<TransformComponent>();
-	transform.WorldPosition = { position.x, position.y, 0 };
-	transform.Rotation = Random::Float(0.0f, 80.0f);
+	entity.SetWorldPosition({ position.x, position.y, 0 });
+	entity.SetRotationCenter(Random::Float(0.0f, 80.0f));
 
 	auto& sprite = entity.AddComponent<SpriteComponent>("box.png");
 	sprite.Color.r = Random::Float(0.0f, 1.0f);

@@ -1,9 +1,10 @@
 #pragma once
 
 #include "Proton/Core/Base.h"
+#include "Proton/Core/AppLayer.h"
 #include "Proton/Core/Window.h"
 #include "Proton/Core/Config.h"
-#include "Proton/Core/AppLayer.h"
+#include "Proton/Core/Project.h"
 
 #ifdef PT_EDITOR
 #include "Proton/Editor/EditorLayer.h"
@@ -38,6 +39,7 @@ namespace proton {
 		ApplicationConfig m_AppConfig;
 		std::vector<AppLayer*> m_AppLayers;
 		Unique<Window> m_Window;
+		Project m_Project;
 
 		bool m_IsRunning = false;
 		bool m_WindowMinimized = false;

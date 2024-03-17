@@ -48,7 +48,6 @@ namespace proton {
 
 			ImGui::EndMenuBar();
 		}
-
 	}
 
 	static std::string GetSceneFilename(const std::string& filepath)
@@ -66,7 +65,7 @@ namespace proton {
 
 	void EditorMenuBar::NewScene()
 	{
-		Scene* scene = SceneManager::CreateEmptyScene("<Unsaved scene>");
+		Scene* scene = SceneManager::CreateEmptyScene();
 		SceneManager::s_Instance->m_ActiveScene = scene;
 		EditorLayer::SetActiveScene(scene);
 	}
@@ -83,9 +82,14 @@ namespace proton {
 
 	void EditorMenuBar::SaveScene()
 	{
-		if (SceneManager::GetActiveScene()->m_SceneFilepath != "<Unsaved scene>")
+		Scene* activeScene = SceneManager::GetActiveScene();
+		if (!activeScene)
+			return;
+
+		if (activeScene->m_SceneFilepath != "<Unsaved scene>")
 		{
-			SceneManager::SaveActiveScene();
+			const std::string filepath = activeScene->m_SceneFilepath;
+			SceneManager::SaveSceneAs(filepath, filepath);
 		}
 		else
 			SaveSceneAs();
@@ -93,11 +97,15 @@ namespace proton {
 
 	void EditorMenuBar::SaveSceneAs()
 	{
+		Scene* activeScene = SceneManager::GetActiveScene();
+		if (!activeScene)
+			return;
+
 		std::string filepath = GetSceneFilename(FileDialogs::SaveFile(".scene.json"));
 		if (filepath.size())
 		{
-			SceneManager::SaveActiveSceneAs(filepath);
-			if (SceneManager::GetActiveScene()->m_SceneFilepath == "<Unsaved scene>")
+			SceneManager::SaveSceneAs(activeScene->m_SceneFilepath, filepath);
+			if (activeScene->m_SceneFilepath == "<Unsaved scene>")
 			{
 				SceneManager::Unload("<Unsaved scene>");
 			}

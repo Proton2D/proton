@@ -17,6 +17,27 @@ namespace proton {
 	{
 		ImGui::Begin("Settings");
 
+
+		char buffer[500];
+		strcpy_s(buffer, Application::Get().m_Project.m_StartScene.c_str());
+
+		if (ImGui::TreeNodeEx("Project", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			ImGui::PushItemWidth(150.0f);
+			if (ImGui::InputText("Start Scene", buffer, 500))
+			{
+				Application::Get().m_Project.m_StartScene = buffer;
+			}
+		
+			ImGui::SameLine();
+			if (ImGui::Button("Apply"))
+			{
+				Application::Get().m_Project.WriteProjectSettings();
+			}
+
+			ImGui::TreePop();
+		}
+
 		if (ImGui::TreeNodeEx("Editor", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			SceneViewportPanel* viewportPanel = EditorLayer::GetSceneViewportPanel();

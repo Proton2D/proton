@@ -16,6 +16,8 @@
 #include "Proton/Events/KeyEvents.h"
 #include "Proton/Events/MouseEvents.h"
 #include "Proton/Utils/Utils.h"
+#include "Proton/Scene/SceneManager.h"
+#include "Proton/Physics/PhysicsWorld.h"
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #include <backends/imgui_impl_opengl3.h>
@@ -76,13 +78,6 @@ namespace proton {
 
 		for (EditorPanel* panel : m_EditorPanels)
 			panel->OnCreate();
-
-		// Check if cache directory exist
-		if (!std::filesystem::exists("editor/cache/"))
-		{
-			if (std::filesystem::create_directories("editor/cache/"))
-				PT_CORE_ERROR_FUNCSIG("Could not create cache directory!");
-		}
 	}
 
 	void EditorLayer::OnDestroy()
@@ -185,6 +180,21 @@ namespace proton {
 		s_Instance->m_SelectedEntity = entity;
 		for (auto& panel : s_Instance->m_EditorPanels)
 			panel->m_SelectedEntity = entity;
+	}
+
+	void EditorLayer::OnBeginSceneSimulation(Scene* scene)
+	{
+		m_SceneBackup[scene->m_SceneFilepath] = scene->CreateSceneCopy();
+	}
+
+	void EditorLayer::OnStopSceneSimulation(Scene* scene)
+	{
+		bool isActiveScene = scene == m_ActiveScene;
+		std::string sceneFilepath = scene->m_SceneFilepath;
+		SceneManager::s_Instance->m_Scenes[sceneFilepath] = m_SceneBackup.at(sceneFilepath);
+		if (isActiveScene)
+			SceneManager::SetActiveScene(sceneFilepath);
+		m_SceneBackup.erase(sceneFilepath);
 	}
 
 	EditorCamera* EditorLayer::GetCamera()

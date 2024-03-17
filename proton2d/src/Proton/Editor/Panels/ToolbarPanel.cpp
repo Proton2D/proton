@@ -31,34 +31,20 @@ namespace proton {
 
 		if (m_ActiveScene->m_SceneState != SceneState::Stop)
 		{
-			// STOP simulation button
 			if (ImGui::Button(FontAwesome_Stop, { 60, 32 }))
 			{
-				std::string filepath = m_ActiveScene->m_SceneFilepath;
-				Scene* scene = SceneManager::GetActiveScene();
-				if (scene->m_PhysicsWorld->IsInitialized())
-					scene->m_PhysicsWorld->DestroyWorld();
-				scene->m_SceneState = SceneState::Stop;
-				SceneManager::EditorLoadFromCache(filepath);
-				SceneManager::SetActiveScene(filepath);
+				m_ActiveScene->Stop();
 			}
 			ImGui::SameLine();
 
-			// PAUSE / RESUME simulation button
 			bool paused = m_ActiveScene->m_SceneState == SceneState::Paused;
 			if (ImGui::Button(paused ? FontAwesome_Resume : FontAwesome_Pause, { 60, 32 }))
 				m_ActiveScene->Pause(!paused);
 		}
 		else
 		{
-			// PLAY simulation button
 			if (ImGui::Button(FontAwesome_Play, { 60, 32 }))
 			{
-				// Temporary solution
-				SceneSerializer serializer(m_ActiveScene); 
-				std::string filepath = m_ActiveScene->m_SceneFilepath == "<Unsaved scene>" ? "unsaved_scene" : m_ActiveScene->m_SceneFilepath;
-				std::replace(filepath.begin(), filepath.end(), '\\', '_');
-				serializer.Serialize("editor/cache/" + filepath + ".scene.json");
 				m_ActiveScene->BeginPlay();
 			}
 		}
@@ -73,7 +59,7 @@ namespace proton {
 		
 		if (ImGui::BeginTabBar("SceneTabBar", ImGuiTabBarFlags_AutoSelectNewTabs))
 		{
-			const std::string& activeScene = SceneManager::GetActiveSceneFilepath();
+			const std::string& activeScene = SceneManager::GetActiveScene()->GetFilepath();
 
 			for (auto& [name, scene] : SceneManager::s_Instance->m_Scenes)
 			{

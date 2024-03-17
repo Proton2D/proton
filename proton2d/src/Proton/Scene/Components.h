@@ -114,4 +114,18 @@ namespace proton {
 	{
 		SpriteAnimation SpriteAnimation;
 	};
+
+
+	// ComponentGroup and AllComponents for Scene::CreateSceneCopy
+
+	template<typename... Component>
+	struct ComponentGroup
+	{
+	};
+
+	using AllComponents =
+		ComponentGroup<TransformComponent, SpriteComponent,
+		CircleRendererComponent, ResizableSpriteComponent,
+		CameraComponent, SpriteAnimationComponent,
+		RigidbodyComponent, BoxColliderComponent, CircleColliderComponent>;
 }

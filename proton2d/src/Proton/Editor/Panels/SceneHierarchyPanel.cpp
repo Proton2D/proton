@@ -18,7 +18,7 @@ namespace proton {
 		}
 
 		ImGui::Dummy(ImGui::GetWindowSize());
-		ImGui::SetCursorPos({ 0, 0 });
+		ImGui::SetCursorPos({ 0, 25 });
 		if (ImGui::BeginDragDropTarget())
 		{
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY_ENTITY"))
@@ -30,12 +30,11 @@ namespace proton {
 		}
 		ImGui::Dummy({ 0, 2 });
 
-		m_ActiveScene->m_Registry.view<RelationshipComponent>().each([&](entt::entity id, auto& relationship)
-		{
-			if (relationship.Parent == entt::null)
-				DrawEntityTreeNode(Entity{ id, m_ActiveScene });
-		});
 
+		for (Entity entity : m_ActiveScene->m_Root)
+		{
+			DrawEntityTreeNode(entity);
+		}
 
 		static Entity treeNodeHovered; // persist state
 		if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(1))

@@ -35,7 +35,6 @@ namespace proton {
 		static void SetActiveScene(Scene* scene);
 		static void SelectEntity(Entity entity);
 
-
 	private:
 		void SetupFonts();
 		void SetupThemeStyle();
@@ -45,6 +44,9 @@ namespace proton {
 		void BeginImGuiRender();
 		void EndImGuiRender();
 
+		void OnBeginSceneSimulation(Scene* scene);
+		void OnStopSceneSimulation(Scene* scene);
+
 	private:
 		static EditorLayer* s_Instance;
 
@@ -52,6 +54,8 @@ namespace proton {
 
 		Scene* m_ActiveScene = nullptr;
 		Entity m_SelectedEntity;
+
+		std::unordered_map<std::string, Shared<Scene>> m_SceneBackup;
 
 		EditorConfig m_Config;
 		EditorMenuBar m_MenuBar;

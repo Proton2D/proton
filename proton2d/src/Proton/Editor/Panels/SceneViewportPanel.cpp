@@ -313,7 +313,9 @@ namespace proton {
 			{
 				const wchar_t* path_wchar = (const wchar_t*)payload->Data;
 				std::filesystem::path path(path_wchar);
-				SceneManager::Load(path.replace_extension().replace_extension().string(), true);
+				std::string sceneFilepath = path.replace_extension().replace_extension().string();
+				SceneManager::Load(sceneFilepath);
+				SceneManager::SetActiveScene(sceneFilepath);
 			}
 
 			ImGui::EndDragDropTarget();

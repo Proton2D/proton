@@ -9,6 +9,7 @@ namespace proton {
 	public:
 		virtual ~AppLayer() = default;
 
+		// Caution: Methods are executed even if scene is not simulated
 		virtual void OnCreate() {}
 		virtual void OnDestroy() {}
 		virtual void OnUpdate(float timestep) {}

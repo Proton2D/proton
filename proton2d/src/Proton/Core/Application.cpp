@@ -63,11 +63,25 @@ namespace proton {
 		SceneManager::Init();
 		PrefabManager::Init();
 
+		if (!m_Project.LoadProjectSettings())
+		{
+			PT_CORE_ERROR_FUNCSIG("Project settings loading failed!");
+			return;
+		}
+
+		SceneManager::Load(m_Project.m_StartScene);
+		SceneManager::SetActiveScene(m_Project.m_StartScene);
+
 		PROFILE_BEGIN_SESSION("Proton-Runtime");
 
 		if (OnCreate()) 
 		{
 			m_IsRunning = true;
+
+		#ifdef PROTON_DISTRIBUTION
+			SceneManager::GetActiveScene()->BeginPlay();
+		#endif
+
 			// The game loop
 			while (m_IsRunning) 
 			{

@@ -29,22 +29,30 @@ namespace proton {
 	class Scene
 	{
 	public:
-		Scene(const std::string& name = "Unnamed scene");
-		virtual ~Scene();
+		Scene(const std::string& name = "Unnamed scene", const std::string& filepath = std::string());
+		virtual ~Scene() = default;
 
-		// Initialize physics world, begin simulation. Set scene state to SceneState::Play.
-		// In Distribution build, this function is automaticlly being called
-		// by SceneManager::SetActiveScene function.
+		Shared<Scene> CreateSceneCopy();
+
+		// Starts scene simulation (SceneState::Play)
+		// Initializes PhysicsWorld
 		void BeginPlay();
 
-		// Pause the simulation. Set scene state to SceneState::Pause
+		// Pauses/resumes simulation (SceneState::Pause)
 		void Pause(bool pause = true);
+
+		// Stops simulation (SceneState::Stop)
+		// Destroys PhysicsWorld 
+		void Stop();
+
+		// SceneState::Play, SceneState::Play, SceneState::Stop
+		SceneState GetSceneState() const;
 		
 		// Create entitiy with random unique identifier (UUID)
 		Entity CreateEntity(const std::string& name = "Entity");
 
 		// Create entitiy with given identifier (UUID)
-		Entity CreateEntityWithUUID(UUID id, const std::string& name = "Entity");
+		Entity CreateEntityWithUUID(UUID id, const std::string& name = "Entity", bool addToSceneRoot = true);
 
 		// Destroy given entity
 		void DestroyEntity(Entity entity, bool popHierachy = true);
@@ -97,9 +105,6 @@ namespace proton {
 
 		// Get scene filepath (relative to "content/scenes" directory)
 		const std::string& GetFilepath() const;
-
-		// SceneState::Play, SceneState::Play, SceneState::Stop
-		SceneState GetSceneState() const;
 
 		bool IsPhysicsEnabled() const;
 

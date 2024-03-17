@@ -49,11 +49,10 @@ namespace proton {
 
 		// Use glm::value_ptr for FloatX and IntX field types.
 		// Supported variable types are listed inside ScriptFieldType enum.
-		void RegisterField(ScriptFieldType type, const std::string& name, void* field, bool showInEditor = true) 
-		{
-			m_ScriptFields[name] = { type, field, showInEditor };
-		}
+		void RegisterField(ScriptFieldType type, const std::string& name, void* field, bool showInEditor = true);
 
+	private:
+		void SetFieldValueData(const std::string& fieldName, void* value);
 		
 	private:
 		bool m_Stopped = false;
@@ -63,7 +62,8 @@ namespace proton {
 
 		friend class Entity;
 		friend class Scene;
-		friend class InspectorPanel;
 		friend class SceneSerializer;
+
+		friend class InspectorPanel;
 	};
 }

@@ -12,40 +12,30 @@ namespace proton {
 	class SceneManager
 	{
 	public:
-		SceneManager() = default;
-		~SceneManager();
+		static Scene* GetScene(const std::string& scenePath);
+		static Scene* GetActiveScene();
+		static Scene* SetActiveScene(const std::string& scenePath);
 
-		static Scene* Load(const std::string& scenePath, bool setActive = false);
+		static Scene* Load(const std::string& scenePath);
 		static void Unload(const std::string& scenePath);
 		static bool IsLoaded(const std::string& scenePath);
 
-		static Scene* SetActiveScene(const std::string& scenePath, bool autoLoad = true);
-		static Scene* GetActiveScene();
-
-		static Scene* GetScene(const std::string& scenePath);
-
 		static void SaveSceneAs(const std::string& scenePath, const std::string& newSenePath);
-		static void SaveActiveSceneAs(const std::string& scenePath);
-		static void SaveActiveScene();
-
-		static const std::string& GetActiveSceneFilepath();
 
 	private:
 		static void Init();
-		// TODO: Remove
-		static Scene* EditorLoadFromCache(const std::string& scenePath);
-		static Scene* CreateEmptyScene(const std::string& scenePath, bool addToRegistry = true);
+		static Scene* CreateEmptyScene(const std::string& scenePath = "<Unsaved scene>");
 
-		Scene* Deserialize(const std::string& scenePath, const std::string& fullFilepath);
 	private:
 		static SceneManager* s_Instance;
 
 		Scene* m_ActiveScene = nullptr;
-		std::map<std::string, Scene*> m_Scenes;
+		std::map<std::string, Shared<Scene>> m_Scenes;
 
 		friend class Application;
 		friend class ToolbarPanel;
 
+		friend class EditorLayer;
 		friend class EditorMenuBar;
 		friend class SceneViewportPanel;
 	};
