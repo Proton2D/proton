@@ -141,11 +141,12 @@ namespace proton {
 
 	void Scene::BeginPlay()
 	{	
+		if (m_SceneState == SceneState::Play || m_SceneState == SceneState::Paused)
+			return; 
+
 	#ifdef PT_EDITOR
 		EditorLayer::Get()->OnBeginSceneSimulation(this);
 	#endif
-		if (m_SceneState == SceneState::Play || m_SceneState == SceneState::Paused)
-			return; 
 
 		if (m_EnablePhysics)
 			m_PhysicsWorld->BuildWorld();
