@@ -1,8 +1,9 @@
 #pragma once
 #include "Proton/Graphics/Sprite.h"
 
-
 namespace proton {
+	
+	class Entity; // forward declaration
 
 	enum Edge : uint16_t
 	{
@@ -17,8 +18,6 @@ namespace proton {
 		Edge_All         = 0xFF
 	};
 
-	struct TransformComponent;
-
 	struct ResizableSpriteTile
 	{
 		TextureCoords Coords;
@@ -30,26 +29,26 @@ namespace proton {
 	public:
 		ResizableSprite() = default;
 
-		void SetSpritesheet(const Shared<Spritesheet>& spritesheet);
+		void SetSpritesheet(const Shared<Spritesheet>& spritesheet, Entity* owningEntity);
 		Shared<Spritesheet> GetSpritesheet();
 
 		// Generate sprite tilemap representing for each tile
 		// - texture coords from source image (spritesheet)
 		// - local transformation matrix (glm::mat4) for Renderer
-		void Generate();
+		void Generate(Entity* owningEntity);
 
 		// Set scale of indivudual tiles
-		void SetTileScale(float tileScale);
+		void SetTileScale(float tileScale, Entity* owningEntity);
 		float GetTileScale() const { return m_TileScale; }
 
 		// Set sliced sprite position inside spritesheet 
 		// Bottom left corner is (0, 0)
-		void SetPositionOffset(const glm::uvec2& position);
+		void SetPositionOffset(const glm::uvec2& position, Entity* owningEntity);
 		const glm::uvec2& GetPositionOffset() const { return m_PositionOffset; };
 
 		// Toggle sprite edges to be rendered as center pieces
 		// Use Edge Enum to toggle specific bits representing edge/corner
-		void SetEdges(uint8_t edges);
+		void SetEdges(uint8_t edges, Entity* owningEntity);
 		uint8_t GetEdges() const;
 
 	private:
@@ -58,12 +57,11 @@ namespace proton {
 		void DetermineTileIndexPositions(TilemapIndexPositions& tilemap);
 
 		// Calculate local transformation matrix (glm::mat4) for each tile
-		void CalculateTileTransforms();
+		void CalculateTileTransforms(Entity* owningEntity);
 
 	private:
 		std::vector<std::vector<ResizableSpriteTile>> m_Tilemap; // [x][y]
-
-		TransformComponent* m_Transform = nullptr;
+		
 		Shared<Spritesheet> m_Spritesheet = nullptr;
 		uint32_t m_Width = 0, m_Height = 0;
 		float m_TileScale = 1.0f;

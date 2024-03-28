@@ -29,6 +29,12 @@ namespace proton {
 			return m_Scene->m_Registry.emplace<TComponent>(m_Handle, std::forward<TArgs>(args)...);
 		}
 
+		template<typename TComponent, typename... TArgs>
+		TComponent& AddOrReplaceComponent(TArgs&&... args)
+		{
+			return m_Scene->m_Registry.emplace_or_replace<TComponent>(m_Handle, std::forward<Args>(args)...);
+		}
+
 		template <typename TComponent>
 		bool HasComponent() const
 		{
@@ -47,14 +53,20 @@ namespace proton {
 			return m_Scene->m_Registry.any_of<TComponents...>(m_Handle);
 		}
 
-		// Remove component from Entity
+		// AddComponent overrides: Definitions in EntityComponent.h
+		// TODO: Move these to Scene::OnComponentAdded<TComponent>
+		template<> ResizableSpriteComponent& AddComponent() const;
+		template<> RigidbodyComponent& AddComponent() const;
+		template<> BoxColliderComponent& AddComponent() const;
+		template<> SpriteAnimationComponent& AddComponent() const;
+
 		template <typename TComponent>
 		void RemoveComponent()
 		{
 			PT_CORE_ASSERT(HasComponent<TComponent>(), "Entity does not have a component!");
 
 			if (std::is_base_of<ScriptComponent, TComponent>::value)
-				TerminateScripts();
+				DestroyAllScripts();
 
 			if (std::is_base_of<CameraComponent, TComponent>::value
 				&& m_Scene->m_PrimaryCameraEntity == *this)
@@ -67,7 +79,6 @@ namespace proton {
 			m_Scene->m_Registry.remove<TComponent>(m_Handle);
 		}
 
-		// Add script to Entity and return instance
 		template <typename TScriptClass>
 		EntityScript* AddScript() const
 		{
@@ -86,91 +97,40 @@ namespace proton {
 			return scriptInstance;
 		}
 
-		// Definitions in EntityComponent.h
-
-		// AddComponent<ResizableSpriteComponent>
-		template<> ResizableSpriteComponent& AddComponent() const;
-
-		// AddComponent<RigidbodyComponent>
-		template<> RigidbodyComponent& AddComponent() const;
-
-		// AddComponent<BoxColliderComponent>
-		template<> BoxColliderComponent& AddComponent() const;
-
-		// AddComponent<SpriteAnimationComponent>
-		template<> SpriteAnimationComponent& AddComponent() const;
-
-
-		// Remove script from Entity
 		void RemoveScript(const std::string& scriptClassName);
-
-		// Get TransformComponent
-		TransformComponent& GetTransform();
-
-		// Set position relative to world center
-		// Updates World and Local position
-		void SetWorldPosition(const glm::vec3& position);
 		
-		// Set position relative to parent entity position
-		// Updates World and Local position
-		void SetLocalPosition(const glm::vec3& position);
-
-		void SetRotationCenter(float angle);
-
-		void RotateCenter(float angle);
-
-		// Get pointer to scene
-		Scene* GetScene() { return m_Scene; }
-
-		// Get Entity unique identifier
-		UUID GetUUID() const;
-
-		// Get Entity tag stored in TagComponent
-		const std::string& GetTag() const;
-
-		// Check if Entity is valid
+		// Entity lifetime
 		bool IsValid();
-
-		// Destroy Entity and it's child entities
 		void Destroy();
 
-		// Add child Entity given as parameter
-		void AddChildEntity(Entity child, bool refreshChildWorldPosition = true);
+		// Scene hierarchy
+		Entity CreateChildEntity(const std::string& name) const;
+		void AddChildEntity(Entity child, bool refreshChildWorldPosition = true) const;
+		void DestroyChildEntities() const;
+		void PopHierarchy() const;
+		bool IsParentOf(Entity entity) const;
 
-		Entity CreateChildEntity(const std::string& name);
+		// Component getters
+		Scene* GetScene() const;
+		UUID GetUUID() const;
+		const std::string& GetTag() const;
+		TransformComponent& GetTransform() const;
+		Sprite& GetSprite() const;
+		SpriteAnimation& GetSpriteAnimation() const;
+		b2Body* GetRuntimeBody() const;
 
-		// Destroy all child entities
-		void DestroyChildEntities();
+		// Transform modifiers
+		void SetWorldPosition(const glm::vec3& position) const;
+		void SetLocalPosition(const glm::vec3& position) const;
+		void SetRotationCenter(float angle) const;
+		void RotateCenter(float angle) const;
 
-		// Detach Entity from parent Entity and move to scene root
-		void PopHierarchy();
-
-		// Check if Entity is parent of a given Entity
-		bool IsParentOf(Entity entity);
-
-		// ============== Box2D Rigidbody related ==============
-
-		// RigidbodyComponent required
-		b2Body* RetrieveRuntimeBody();
-
-		// RigidbodyComponent required
-		void SetLinearVelocity(float x_mps, float y_mps);
-
-		// RigidbodyComponent required
-		void SetLinearVelocityX(float mps);
-
-		// RigidbodyComponent required
-		void SetLinearVelocityY(float mps);
-
-		// RigidbodyComponent required
-		glm::vec2 GetLinearVelocity();
-
-		// RigidbodyComponent required
-		void ApplyLinearImpulse(const glm::vec2& impulse, const glm::vec2& point = {0.0f, 0.0f});
-
-		// ======================================================
-
-		SpriteAnimation* CreateSpriteAnimation();
+		// Box2D body related methods
+		glm::vec2 GetLinearVelocity() const;
+		void SetLinearVelocity(float x_mps, float y_mps) const;
+		void SetLinearVelocityX(float mps) const;
+		void SetLinearVelocityY(float mps) const;
+		void ApplyLinearImpulse(const glm::vec2& impulse, const glm::vec2& point = {0.0f, 0.0f}) const;
 
 		// Operator overloads
 		operator uint32_t() const { return (uint32_t)m_Handle; }
@@ -180,12 +140,11 @@ namespace proton {
 		bool operator!=(const Entity& other) const { return !(other == *this); }
 
 	private:
-		void TerminateScripts();
+		void DestroyAllScripts();
 
 	private:
 		entt::entity m_Handle = entt::null;
 		Scene* m_Scene = nullptr;
-		b2Body* m_RuntimeBody = nullptr;
 
 		friend class Scene;
 		friend class SceneSerializer;

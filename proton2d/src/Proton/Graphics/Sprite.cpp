@@ -24,8 +24,6 @@ namespace proton {
 
 	void Sprite::SetTexture(Shared<Texture> texture)
 	{
-		if (!texture)
-			return;
 		m_Texture = texture;
 		m_Spritesheet = nullptr;
 		m_PixelSize = { texture->GetWidth(), texture->GetHeight() };
@@ -42,7 +40,6 @@ namespace proton {
 
 	void Sprite::SetTile(uint32_t x, uint32_t y)
 	{
-		PT_CORE_ASSERT(m_Spritesheet, "Sprite doesn't have spritesheet attached!");
 		glm::uvec2 count = m_Spritesheet->GetTileCount();
 		x %= count.x; y %= count.y;
 		m_TilePos = { x, y };

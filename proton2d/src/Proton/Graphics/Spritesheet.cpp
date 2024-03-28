@@ -28,11 +28,6 @@ namespace proton {
 		}
 	}
 
-	Shared<Texture> Spritesheet::GetTexture()
-	{
-		return m_Texture;
-	}
-
 	const TextureCoords& Spritesheet::GetTextureCoords(uint32_t x, uint32_t y) const
 	{
 		PT_CORE_ASSERT(x < m_TileCount.x && y < m_TileCount.y, "Tile position out of bounds!");

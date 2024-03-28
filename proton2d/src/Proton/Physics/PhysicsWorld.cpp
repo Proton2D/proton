@@ -49,6 +49,7 @@ namespace proton {
 		body->SetFixedRotation(rb.FixedRotation);
 		AddFixtureToRuntimeBody(entity, body);
 		m_RuntimeBodies[entity.GetUUID()] = body;
+		rb.RuntimeBody = body;
 		
 		return body;
 	}
@@ -150,6 +151,7 @@ namespace proton {
 
 	void PhysicsWorld::Update(float ts)
 	{
+		PROFILE_FUNCTION();
 		// Initialize entities created during game runtime
 		if (m_EntitiesToInitialize.size())
 		{
@@ -217,15 +219,19 @@ namespace proton {
 	void PhysicsContactListener::BeginContact(b2Contact* contact)
 	{
 		CALL_CONTACT_CALLBACK_FUNCTION(OnBegin);
-		callbackA->ContactCount++;
-		callbackB->ContactCount++;
+		if (callbackA)
+			callbackA->ContactCount++;
+		if (callbackB)
+			callbackB->ContactCount++;
 	}
 
 	void PhysicsContactListener::EndContact(b2Contact* contact)
 	{
 		CALL_CONTACT_CALLBACK_FUNCTION(OnEnd);
-		callbackA->ContactCount--;
-		callbackB->ContactCount--;
+		if (callbackA)
+			callbackA->ContactCount--;
+		if (callbackB)
+			callbackB->ContactCount--;
 	}
 
 	void PhysicsContactListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)

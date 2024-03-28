@@ -15,7 +15,6 @@ namespace proton {
 	{
 	public:
 		SpriteAnimation() = default;
-		SpriteAnimation(Sprite* sprite);
 
 		// index - spritesheet Y tile pos (from image bottom)
 		void AddAnimation(uint16_t index, uint16_t frameCount, AnimationPlayMode playmode = AnimationPlayMode::REPEAT);
@@ -35,9 +34,9 @@ namespace proton {
 
 	private:
 		void Update(float ts);
-		void SetSprite(Sprite* sprite);
 
-		Sprite* m_Sprite = nullptr;
+	private:
+		Unique<Entity> m_OwningEntity;
 		
 		struct Animation
 		{

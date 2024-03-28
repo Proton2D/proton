@@ -399,9 +399,9 @@ namespace proton {
 			component.Color = { c[0], c[1], c[2], c[3] };
 
 			if (jsonData.contains("Spritesheet"))
-				sprite.SetSpritesheet(AssetManager::GetSpritesheet(jsonData["Spritesheet"]));
-
-			sprite.Generate();
+				sprite.SetSpritesheet(AssetManager::GetSpritesheet(jsonData["Spritesheet"]), &entity);
+			else
+				sprite.Generate(&entity);
 		}
 
 		// Deserialize CircleRendererComponent

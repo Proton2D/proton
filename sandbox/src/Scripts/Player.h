@@ -24,7 +24,6 @@ private:
 	float m_GravityModifier = -10.0f;
 
 	PlayerState m_State = Idle;
-	SpriteAnimation* m_Animation;
 	float m_Direction = 1.0f;
 	float m_JumpTimer = 0.0f;
 

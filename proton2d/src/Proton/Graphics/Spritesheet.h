@@ -17,8 +17,7 @@ namespace proton {
 	public:
 		Spritesheet(Shared<Texture> texture, uint32_t tileWidth, uint32_t tileHeight);
 
-		// Returns pointer to OpenGL texture object
-		Shared<Texture> GetTexture();
+		const Shared<Texture>& GetTexture() { return m_Texture; }
 
 		// Get sheet size in pixels
 		const glm::uvec2& GetSheetSize() const { return m_SheetSize; }

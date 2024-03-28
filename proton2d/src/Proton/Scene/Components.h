@@ -87,6 +87,7 @@ namespace proton {
 
 	struct RigidbodyComponent
 	{
+		b2Body* RuntimeBody = nullptr;
 		b2BodyType Type = b2_staticBody;
 		bool FixedRotation = false;
 	};
@@ -114,18 +115,4 @@ namespace proton {
 	{
 		SpriteAnimation SpriteAnimation;
 	};
-
-
-	// ComponentGroup and AllComponents for Scene::CreateSceneCopy
-
-	template<typename... Component>
-	struct ComponentGroup
-	{
-	};
-
-	using AllComponents =
-		ComponentGroup<TransformComponent, SpriteComponent,
-		CircleRendererComponent, ResizableSpriteComponent,
-		CameraComponent, SpriteAnimationComponent,
-		RigidbodyComponent, BoxColliderComponent, CircleColliderComponent>;
 }

@@ -20,12 +20,14 @@ void Player::OnRegisterFields()
 bool Player::OnCreate()
 {
 	// Set up animations
-	m_Animation = CreateSpriteAnimation();
-	m_Animation->AddAnimation(Idle, 10, AnimationPlayMode::REPEAT);
-	m_Animation->AddAnimation(Run,   8, AnimationPlayMode::REPEAT);
-	m_Animation->AddAnimation(Jump,  3, AnimationPlayMode::PAUSED);
-	m_Animation->AddAnimation(Land,  9, AnimationPlayMode::PLAY_ONCE);
-	m_Animation->SetFPS(8);
+	AddComponent<SpriteAnimationComponent>();
+	SpriteAnimation& animation = GetSpriteAnimation();
+
+	animation.AddAnimation(Idle, 10, AnimationPlayMode::REPEAT);
+	animation.AddAnimation(Run,   8, AnimationPlayMode::REPEAT);
+	animation.AddAnimation(Jump,  3, AnimationPlayMode::PAUSED);
+	animation.AddAnimation(Land,  9, AnimationPlayMode::PLAY_ONCE);
+	animation.SetFPS(8);
 
 	// Foot sensor is used to detect if player is touching the ground
 	Entity footSensor = CreateChildEntity("FootSensor");
@@ -40,6 +42,9 @@ bool Player::OnCreate()
 
 void Player::OnUpdate(float ts)
 {
+	// Get SpriteAnimation object reference
+	SpriteAnimation& animation = GetSpriteAnimation();
+
 	// Poll key states for player movement
 	bool moveRight = Input::IsKeyPressed(Key::D);
 	bool moveLeft = Input::IsKeyPressed(Key::A);
@@ -58,7 +63,7 @@ void Player::OnUpdate(float ts)
 	if (move && m_State != Jump && m_JumpTimer >= s_LandAnimationCancelTime)
 		m_State = Run;
 	// Set player state to Idle when stopped running or landing animation finished playing
-	else if (m_State == Run || (m_State == Land && m_Animation->FinishedPlaying()))
+	else if (m_State == Run || (m_State == Land && animation.FinishedPlaying()))
 		m_State = Idle;
 
 	// Start landing animation
@@ -86,12 +91,12 @@ void Player::OnUpdate(float ts)
 
 		// Update jump animation frame
 		uint16_t frame = velocity > 0.0f ? (m_JumpTimer < s_JumpFrameSwitchTime ? 0 : 1) : 2;
-		m_Animation->SetAnimationFrame(frame);
+		animation.SetAnimationFrame(frame);
 		m_State = Jump;
 	}
 
 	// Update animation and timer
-	m_Animation->PlayAnimation(m_State);
-	m_Animation->SetMirrorFlip(m_Direction < 0.0f);
+	animation.PlayAnimation(m_State);
+	animation.SetMirrorFlip(m_Direction < 0.0f);
 	m_JumpTimer += ts;
 }

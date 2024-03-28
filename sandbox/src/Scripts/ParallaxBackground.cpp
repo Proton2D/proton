@@ -12,13 +12,14 @@ void ParallaxBackground::OnRegisterFields()
 
 bool ParallaxBackground::OnCreate()
 {
+	DestroyChildEntities();
+
 	m_Scene = GetScene();
 	auto& camera = m_Scene->GetPrimaryCamera();
 	auto& sprite = GetComponent<SpriteComponent>().Sprite;
 
 	m_SpriteAspectRatio = sprite.GetAspectRatio();
 	m_CopiesCount = 1 + (uint32_t)ceil(camera.GetAspectRatio() / m_SpriteAspectRatio);
-	DestroyChildEntities();
 
 	for (uint32_t i = 0; i < m_CopiesCount; i++)
 	{

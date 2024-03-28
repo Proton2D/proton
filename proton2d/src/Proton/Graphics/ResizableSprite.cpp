@@ -2,38 +2,40 @@
 #include "Proton/Graphics/ResizableSprite.h"
 #include "Proton/Scene/Components.h"
 #include "Proton/Utils/Utils.h"
+#include "Proton/Scene/Entity.h"
 
 namespace proton {
 
-	void ResizableSprite::SetSpritesheet(const Shared<Spritesheet>& spritesheet)
+	void ResizableSprite::SetSpritesheet(const Shared<Spritesheet>& spritesheet, Entity* owningEntity)
 	{
 		m_Spritesheet = spritesheet;
-		Generate();
+		Generate(owningEntity);
 	}
 
-	void ResizableSprite::Generate()
+	void ResizableSprite::Generate(Entity* owningEntity)
 	{
-		if (m_Transform->Scale.x < 0.0f || m_Transform->Scale.y < 0.0f)
+		auto& transform = owningEntity->GetTransform();
+		if (transform.Scale.x < 0.0f || transform.Scale.y < 0.0f)
 		{
 			m_Width = 0; m_Height = 0;
 			m_Tilemap.clear();
 			return;
 		}
 
-		m_Width = std::max((uint32_t)ceil(m_Transform->Scale.x / m_TileScale), 2u);
-		m_Height = std::max((uint32_t)ceil(m_Transform->Scale.y / m_TileScale), 2u);
+		m_Width = std::max((uint32_t)ceil(transform.Scale.x / m_TileScale), 2u);
+		m_Height = std::max((uint32_t)ceil(transform.Scale.y / m_TileScale), 2u);
 
 		m_Tilemap.resize(m_Width);
 		for (auto& column : m_Tilemap)
 			column.resize(m_Height);
 
-		CalculateTileTransforms();
+		CalculateTileTransforms(owningEntity);
 	}
 
-	void ResizableSprite::SetTileScale(float tileScale)
+	void ResizableSprite::SetTileScale(float tileScale, Entity* owningEntity)
 	{
 		m_TileScale = tileScale < 0.01f ? 0.01f : tileScale;
-		Generate();
+		Generate(owningEntity);
 	}
 
 	// Generate tile index positions
@@ -119,11 +121,13 @@ namespace proton {
 				tilemap[x][0] = { sx + 1, sy };
 	}
 
-	void ResizableSprite::CalculateTileTransforms()
+	void ResizableSprite::CalculateTileTransforms(Entity* owningEntity)
 	{
+		auto& transform = owningEntity->GetTransform();
+
 		// width, height tile count (with fraction)
-		float width = (*m_Transform).Scale.x / m_TileScale;
-		float height = (*m_Transform).Scale.y / m_TileScale;
+		float width = transform.Scale.x / m_TileScale;
+		float height = transform.Scale.y / m_TileScale;
 		glm::uvec2 tileCount = { (uint32_t)ceil(width), (uint32_t)ceil(height) };
 		
 		// Offset means the size of a cut of the penultimate tile
@@ -259,21 +263,21 @@ namespace proton {
 		}
 	}
 
-	void ResizableSprite::SetPositionOffset(const glm::uvec2& position)
+	void ResizableSprite::SetPositionOffset(const glm::uvec2& position, Entity* owningEntity)
 	{
 		if (position != m_PositionOffset)
 		{
 			m_PositionOffset = position;
-			CalculateTileTransforms();
+			CalculateTileTransforms(owningEntity);
 		}
 	}
 
-	void ResizableSprite::SetEdges(uint8_t edges)
+	void ResizableSprite::SetEdges(uint8_t edges, Entity* owningEntity)
 	{
 		if (edges != m_Edges)
 		{
 			m_Edges = edges;
-			CalculateTileTransforms();
+			CalculateTileTransforms(owningEntity);
 		}
 	}
 

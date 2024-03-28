@@ -29,92 +29,55 @@ namespace proton {
 	class Scene
 	{
 	public:
-		Scene(const std::string& name = "Unnamed scene", const std::string& filepath = std::string());
-		virtual ~Scene() = default;
+		Scene(const std::string& name = "Unnamed scene", const std::string& filepath = "");
+		virtual ~Scene();
 
 		Shared<Scene> CreateSceneCopy();
 
-		// Starts scene simulation (SceneState::Play)
-		// Initializes PhysicsWorld
-		void BeginPlay();
-
-		// Pauses/resumes simulation (SceneState::Pause)
-		void Pause(bool pause = true);
-
-		// Stops simulation (SceneState::Stop)
-		// Destroys PhysicsWorld 
-		void Stop();
-
-		// SceneState::Play, SceneState::Play, SceneState::Stop
-		SceneState GetSceneState() const;
+		void BeginPlay(); // SceneState::Play
+		void Pause(bool pause = true); // SceneState::Pause
+		void Stop(); // SceneState::Stop
 		
-		// Create entitiy with random unique identifier (UUID)
 		Entity CreateEntity(const std::string& name = "Entity");
-
-		// Create entitiy with given identifier (UUID)
 		Entity CreateEntityWithUUID(UUID id, const std::string& name = "Entity", bool addToSceneRoot = true);
-
-		// Destroy given entity
 		void DestroyEntity(Entity entity, bool popHierachy = true);
-
-		// Destroy all entities on the scene
+		void DestroyChildEntities(Entity entity);
 		void DestroyAll();
-
-		// Find entity by its unique id (UUID)
-		Entity FindByID(UUID id);
-
-		// Find entity by tag (name) from TagComponent
-		Entity FindByTag(const std::string& tag);
 
 		void SetEntityLocalPosition(Entity entity, const glm::vec3& position);
 		void SetEntityWorldPosition(Entity entity, const glm::vec3& position);
 
-		// Find all entities that have given tag
+		Entity FindByID(UUID id);
+		Entity FindByTag(const std::string& tag);
 		std::vector<Entity> FindAllByTag(const std::string& tag);
 
-		// Get entities with given set of components
-		template<typename... Components>
-		auto GetAllEntitiesWith()
-		{
-			return m_Registry.view<Components...>();
-		}
-
-		// TODO: Add DuplicateEntity function
-
-		// Camera related methods
 		void SetPrimaryCameraEntity(Entity entity);
 		Entity GetPrimaryCameraEntity();
 		Camera& GetPrimaryCamera();
 		const glm::vec3& GetPrimaryCameraPosition();
 
-		// Cursor related methods
 		const glm::vec2& GetCursorWorldPosition();
 		bool IsCursorHoveringEntity(Entity entity);
 		std::vector<Entity> GetEntitiesOnCursorLocation();
 
-		// Get by UUID the Box2D body from physics world during game runtime. 
-		// Entity must have RigidbodyComponent.
-		b2Body* GetRuntimeBody(UUID id);
+		bool IsPhysicsEnabled() const;
+		bool IsPhysicsWorldInitialized() const;
 
-		// Set renderer screen clear color
-		void SetScreenClearColor(const glm::vec4& color);
-
+		const std::string& GetFilepath() const;
+		SceneState GetSceneState() const { return m_SceneState; }
 		uint32_t GetEntitiesCount() const;
-
 		uint32_t GetScriptedEntitiesCount() const;
 
-		// Get scene filepath (relative to "content/scenes" directory)
-		const std::string& GetFilepath() const;
+		void SetScreenClearColor(const glm::vec4& color);
 
-		bool IsPhysicsEnabled() const;
-
-		bool IsPhysicsWorldInitialized() const;
+		template<typename... Components>
+		auto GetAllEntitiesWith() { return m_Registry.view<Components...>(); }
 
 	private:
 		void OnUpdate(float ts);
+		void UpdateScripts(float ts);
 		void RenderScene(const Camera& camera);
 		void OnViewportResize(uint32_t width, uint32_t height);
-		void DestroyChildEntities(Entity entity);
 
 		void CachePrimaryCameraPosition();
 		void CacheCursorWorldPosition();
@@ -122,7 +85,6 @@ namespace proton {
 		void CalculateWorldPositions(bool isPhysicsSimulated);
 
 	private:
-		// TODO: Add Scene UUID
 		SceneState m_SceneState = SceneState::Stop;
 
 		// General
@@ -138,7 +100,7 @@ namespace proton {
 		// Camera
 		entt::entity m_PrimaryCameraEntity = entt::null;
 		Camera* m_PrimaryCamera = nullptr;
-		Camera m_DefaultCamera; // pass this to Renderer if m_PrimaryCamera is nullptr
+		Camera m_DefaultCamera; // passed to Renderer if m_PrimaryCamera is nullptr
 
 		// Physics
 		bool m_EnablePhysics = true;

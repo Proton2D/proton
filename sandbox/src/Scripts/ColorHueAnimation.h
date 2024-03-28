@@ -14,30 +14,16 @@ public:
 		RegisterField(ScriptFieldType::Float, "HueRangeQ", &m_HueRangeQ, false);
 	}
 
-	virtual bool OnCreate() override
-	{
-		if (HasComponent<SpriteComponent>())
-			m_Sprite = &GetComponent<SpriteComponent>();
-
-		if (HasComponent<ResizableSpriteComponent>())
-			m_ResizableSprite = &GetComponent<ResizableSpriteComponent>();
-
-		if (HasComponent<CircleRendererComponent>())
-			m_CircleRenderer = &GetComponent<CircleRendererComponent>();
-
-		return true;
-	}
-
 	virtual void OnUpdate(float ts) override
 	{
-		if (m_Sprite)
-			UpdateHue(ts, m_Sprite->Color);
+		if (HasComponent<SpriteComponent>())
+			UpdateHue(ts, GetComponent<SpriteComponent>().Color);
 
-		if (m_ResizableSprite)
-			UpdateHue(ts, m_ResizableSprite->Color);
+		if (HasComponent<ResizableSpriteComponent>())
+			UpdateHue(ts, GetComponent<ResizableSpriteComponent>().Color);
 
-		if (m_CircleRenderer)
-			UpdateHue(ts, m_CircleRenderer->Color);
+		if (HasComponent<CircleRendererComponent>())
+			UpdateHue(ts, GetComponent<CircleRendererComponent>().Color);
 	}
 
 	void UpdateHue(float ts, glm::vec4& colorRGBA)
@@ -75,10 +61,5 @@ private:
 	float m_Saturation = 0.8f;
 	float m_HueRangeP = 0.0f;
 	float m_HueRangeQ = 1.0f;
-	
 	float m_Direction = 1.0f;
-
-	SpriteComponent* m_Sprite = nullptr;
-	ResizableSpriteComponent* m_ResizableSprite = nullptr;
-	CircleRendererComponent* m_CircleRenderer = nullptr;
 };

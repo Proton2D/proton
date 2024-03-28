@@ -12,10 +12,12 @@ public:
 
 	virtual bool OnCreate() override
 	{
-		m_SpriteAnimation = CreateSpriteAnimation();
-		m_SpriteAnimation->AddAnimation(0, 8);
-		m_SpriteAnimation->PlayAnimation(0);
-		m_SpriteAnimation->SetFPS(10);
+		AddComponent<SpriteAnimationComponent>();
+		SpriteAnimation& animation = GetSpriteAnimation();
+
+		animation.AddAnimation(0, 8);
+		animation.PlayAnimation(0);
+		animation.SetFPS(10);
 
 		auto& bc = GetComponent<BoxColliderComponent>();
 		bc.ContactCallback.OnBegin = [&](PhysicsContact contact) 
@@ -30,6 +32,5 @@ public:
 	}
 
 private:
-	SpriteAnimation* m_SpriteAnimation;
 	int m_TargetLevel = 1;
 };

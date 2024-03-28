@@ -1,17 +1,8 @@
 #include "ptpch.h"
 #include "Proton/Graphics/SpriteAnimation.h"
+#include "Proton/Scene/Entity.h"
 
 namespace proton {
-
-    SpriteAnimation::SpriteAnimation(Sprite* sprite)
-        : m_Sprite(sprite)
-    {
-    }
-
-    void SpriteAnimation::SetSprite(Sprite* sprite)
-    {
-        m_Sprite = sprite;
-    }
 
     void SpriteAnimation::AddAnimation(uint16_t index, uint16_t frameCount, AnimationPlayMode playmode)
     {
@@ -25,21 +16,24 @@ namespace proton {
         PT_CORE_ASSERT(m_Animations.find(index) != m_Animations.end(), "Animation not found");
         if (index != m_CurrentAnimationIndex)
         {
+            auto& sprite = m_OwningEntity->GetSprite();
             m_CurrentAnimationIndex = index;
             m_CurrentAnimation = &m_Animations[index];
-            m_Sprite->SetTile(startFrame, index);
+            sprite.SetTile(startFrame, index);
         }
     }
 
     void SpriteAnimation::SetAnimationFrame(uint16_t frame)
     {
-        m_Sprite->SetTile(frame, m_CurrentAnimationIndex);
+        auto& sprite = m_OwningEntity->GetSprite();
+        sprite.SetTile(frame, m_CurrentAnimationIndex);
         m_CurrentFrame = frame;
     }
 
     void SpriteAnimation::SetMirrorFlip(bool mirror_x, bool mirror_y)
     {
-        m_Sprite->MirrorFlip(mirror_x, mirror_y);
+        auto& sprite = m_OwningEntity->GetSprite();
+        sprite.MirrorFlip(mirror_x, mirror_y);
     }
 
     void SpriteAnimation::Replay()
@@ -66,17 +60,18 @@ namespace proton {
 
         if (m_ElapsedTime >= m_FrameTime)
         {
+            auto& sprite = m_OwningEntity->GetSprite();
             if (m_CurrentAnimation->PlayMode == AnimationPlayMode::REPEAT)
             {
                 m_CurrentFrame %= m_CurrentAnimation->FrameCount;
-                m_Sprite->SetTile(m_CurrentFrame, m_Sprite->GetTilePos().y);
+                sprite.SetTile(m_CurrentFrame, sprite.GetTilePos().y);
             }
             else // if (m_PlayMode == AnimationPlayMode::PLAY_ONCE)
             {
                 if (m_CurrentFrame < m_CurrentAnimation->FrameCount)
-                    m_Sprite->SetTile(m_CurrentFrame, m_Sprite->GetTilePos().y);
+                    sprite.SetTile(m_CurrentFrame, sprite.GetTilePos().y);
                 else
-                    m_Sprite->SetTile(0, m_Sprite->GetTilePos().y);
+                    sprite.SetTile(0, sprite.GetTilePos().y);
             }
 
             m_ElapsedTime = 0.0f;

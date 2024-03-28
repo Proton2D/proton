@@ -23,6 +23,32 @@ namespace proton {
 	{
 	}
 
+	Scene::~Scene()
+	{
+		Stop();
+		auto view = m_Registry.view<ScriptComponent>();
+		for (auto entity : view)
+		{
+			auto& component = view.get<ScriptComponent>(entity);
+			for (auto& script : component.Scripts)
+				delete script.second;
+		}
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	// CopyComponent function implementations taken from:
+	// https://github.com/TheCherno/Hazel/blob/master/Hazel/src/Hazel/Scene/Scene.cp
+	/////////////////////////////////////////////////////////////////////////////////////////////
+	template<typename... Component>
+	struct ComponentGroup
+	{
+	};
+
+	using ComponentsToCopy =
+		ComponentGroup<TransformComponent, CameraComponent,
+		SpriteComponent, CircleRendererComponent, ResizableSpriteComponent,
+		RigidbodyComponent, BoxColliderComponent, CircleColliderComponent>;
+
 	template<typename... TComponent>
 	static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<UUID, entt::entity>& enttMap)
 	{
@@ -59,6 +85,7 @@ namespace proton {
 	{
 		CopyComponentIfExists<TComponent...>(dst, src);
 	}
+	/////////////////////////////////////////////////////////////////////////////////////////////
 
 	Shared<Scene> Scene::CreateSceneCopy()
 	{
@@ -108,8 +135,9 @@ namespace proton {
 			newScene->m_Root.push_back(Entity(enttMap.at(entity.GetUUID()), newScene.get()));
 		}
 
-		// Copy components (except IDComponent, TagComponent, RelationshipComponent and ScriptComponent)
-		CopyComponent(AllComponents{}, dstSceneRegistry, m_Registry, enttMap);
+		// Copy all components except:
+		// IDComponent, TagComponent, RelationshipComponent, ScriptComponent, SpriteAnimationComponent
+		CopyComponent(ComponentsToCopy{}, dstSceneRegistry, m_Registry, enttMap);
 
 		// Create EntityScript instances
 		for (entt::entity srcEntity : m_Registry.view<ScriptComponent>())
@@ -164,18 +192,17 @@ namespace proton {
 
 	void Scene::Stop()
 	{
+		if (m_SceneState == SceneState::Stop)
+			return;
+
 		if (m_PhysicsWorld->IsInitialized())
 			m_PhysicsWorld->DestroyWorld();
+
 		m_SceneState = SceneState::Stop;
 
 	#ifdef PT_EDITOR
 		EditorLayer::Get()->OnStopSceneSimulation(this);
 	#endif
-	}
-
-	SceneState Scene::GetSceneState() const
-	{
-		return m_SceneState;
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
@@ -203,7 +230,7 @@ namespace proton {
 		if (!entity.IsValid()) return;
 
 		if (entity.HasComponent<ScriptComponent>())
-			entity.TerminateScripts();
+			entity.DestroyAllScripts();
 
 		if (entity.HasComponent<RigidbodyComponent>())
 		{
@@ -217,18 +244,10 @@ namespace proton {
 			m_PrimaryCamera = nullptr;
 		}
 
-		auto& rc = entity.GetComponent<RelationshipComponent>();
-
-		// Destroy child entities
-		Entity current{ rc.First, this };
-		while (current)
-		{
-			entt::entity next = current.GetComponent<RelationshipComponent>().Next;
-			DestroyEntity(current, false);
-			current = Entity{ next, this };
-		}
+		DestroyChildEntities(entity);
 
 		// Update parent hierarchy only for entity which is being deleted
+		auto& rc = entity.GetComponent<RelationshipComponent>();
 		if (popHierarchy && rc.Parent != entt::null)
 		{
 			Entity parent{ rc.Parent, this };
@@ -256,6 +275,20 @@ namespace proton {
 
 		m_EntityMap.erase(entity.GetUUID());
 		m_Registry.destroy(entity.m_Handle);
+	}
+
+	void Scene::DestroyChildEntities(Entity entity)
+	{
+		auto& rc = entity.GetComponent<RelationshipComponent>();
+		Entity current{ rc.First, this };
+		while (current)
+		{
+			entt::entity next = current.GetComponent<RelationshipComponent>().Next;
+			DestroyEntity(current, false);
+			current = Entity{ next, this };
+		}
+		rc.ChildrenCount = 0;
+		rc.First = entt::null;
 	}
 
 	void Scene::DestroyAll()
@@ -342,58 +375,59 @@ namespace proton {
 		CachePrimaryCameraPosition();
 		CacheCursorWorldPosition();
 
-		// Calculate world position (no physics simulation)
-		if (m_SceneState != SceneState::Play)
-			CalculateWorldPositions(false);
-
 		if (m_SceneState == SceneState::Play)
 		{
 			// Update physics
 			if (m_EnablePhysics && m_PhysicsWorld->IsInitialized())
 			{
-				PROFILE_SCOPE("update_physics");
 				m_PhysicsWorld->Update(ts);
-
-				// Calculate World Position (physics simulation)
+				// Calculate world positions (physics simulation)
 				CalculateWorldPositions(true);
 			}
+
 			// Update scripts
-			{
-				PROFILE_SCOPE("update_scripts");
-				m_Registry.view<ScriptComponent>().each([=](auto e, auto& component)
-				{
-					Entity entity{ e, this };
-					bool hasRigidbodyComponent = entity.HasComponent<RigidbodyComponent>();
+			UpdateScripts(ts);
 
-					for (auto& [scriptClassName, scriptInstance] : component.Scripts)
-					{
-						if (!scriptInstance->m_Initialized)
-						{
-							// Initialize EntityScript instance
-							scriptInstance->m_Initialized = true;
-
-							if (hasRigidbodyComponent && m_PhysicsWorld->IsInitialized())
-								scriptInstance->RetrieveRuntimeBody();
-
-							if (!scriptInstance->OnCreate()) 
-							{
-								scriptInstance->m_Stopped = true;
-								continue;
-							}
-						}
-						if(!scriptInstance->m_Stopped)
-							scriptInstance->OnUpdate(ts);
-					}
-				});
-			}
 			// Update animations
 			auto view = m_Registry.view<SpriteAnimationComponent>();
 			for (auto entity : view)
-				view.get<SpriteAnimationComponent>(entity).SpriteAnimation.Update(ts);
+			{
+				auto& animation = view.get<SpriteAnimationComponent>(entity).SpriteAnimation;
+				animation.Update(ts);
+			}
+		}
+		else 
+		{
+			// Calculate world positions (no physics simulation)
+			CalculateWorldPositions(false);
 		}
 
 		// Render scene
 		RenderScene(GetPrimaryCamera());
+	}
+
+	void Scene::UpdateScripts(float ts)
+	{
+		PROFILE_FUNCTION();
+		auto view = m_Registry.view<ScriptComponent>();
+		for (auto entity : view)
+		{
+			auto& component = view.get<ScriptComponent>(entity);
+			for (auto& [scriptClassName, scriptInstance] : component.Scripts)
+			{
+				if (!scriptInstance->m_Initialized)
+				{
+					scriptInstance->m_Initialized = true;
+					if (!scriptInstance->OnCreate())
+					{
+						scriptInstance->m_Stopped = true;
+						continue;
+					}
+				}
+				if (!scriptInstance->m_Stopped)
+					scriptInstance->OnUpdate(ts);
+			}
+		}
 	}
 
 	Entity Scene::FindByID(UUID id)
@@ -454,7 +488,6 @@ namespace proton {
 		}
 
 		// Render entities with ResizableSpriteComponent
-		// TODO: Think about using TilingFactor in shader program for center tiles
 		auto renderableResizableSprite = m_Registry.view<TransformComponent, ResizableSpriteComponent>();
 		for (auto e : renderableResizableSprite)
 		{
@@ -486,7 +519,6 @@ namespace proton {
 			Renderer::DrawCircle(Math::GetTransform(transform.WorldPosition, transform.Scale, transform.Rotation), circle.Color, circle.Thickness, circle.Fade);
 		}
 
-
 		Renderer::EndScene();
 	}
 
@@ -498,20 +530,7 @@ namespace proton {
 			auto& camera = view.get<CameraComponent>(entity);
 			camera.Camera.SetAspectRatio((float)width / float(height));
 		}
-	}
-
-	void Scene::DestroyChildEntities(Entity entity)
-	{
-		auto& rc = entity.GetComponent<RelationshipComponent>();
-		Entity current{ rc.First, this };
-		while (current)
-		{
-			entt::entity next = current.GetComponent<RelationshipComponent>().Next;
-			DestroyEntity(current, false);
-			current = Entity{ next, this };
-		}
-		rc.ChildrenCount = 0;
-		rc.First = entt::null;
+		m_DefaultCamera.SetAspectRatio((float)width / float(height));
 	}
 
 	void Scene::CachePrimaryCameraPosition()
@@ -647,12 +666,6 @@ namespace proton {
 			}
 		}
 		return entities;
-	}
-
-	b2Body* Scene::GetRuntimeBody(UUID id)
-	{
-		PT_CORE_ASSERT(m_EnablePhysics && m_PhysicsWorld->IsInitialized(), "Physics world is not initialized");
-		return m_PhysicsWorld->GetRuntimeBody(id);
 	}
 
 	const glm::vec3& Scene::GetPrimaryCameraPosition()
